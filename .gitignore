@@ -1,0 +1,15 @@
+.idea
+managed_components
+dependencies.lock
+sdkconfig.old
+config/setting_backup.json
+build
+components
+*.pkg*
+.vscode
+.cache
+
+
+# drawio
+.$*.drawio.*
+

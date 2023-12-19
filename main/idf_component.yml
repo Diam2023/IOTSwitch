@@ -1,0 +1,12 @@
+## IDF Component Manager Manifest File
+dependencies:
+  ## Required IDF version
+  idf:
+    version: ">=5.0"
+  ## mdns
+  espressif/mdns: "^1.0.3"
+  ## mqtt cxx
+  espressif/esp-idf-cxx: "^1.0.0-beta"
+  espressif/esp_mqtt_cxx: "^0.2.0"
+  espressif/led_strip: "^2"
+  bblanchon/arduinojson: "^6.21.2"
