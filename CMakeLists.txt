@@ -10,8 +10,8 @@ set(CMAKE_CXX_STANDARD 17)
 # Debug mode
 set(CMAKE_BUILD_TYPE Debug)
 
-# Build target is esp32s3
 set(IDF_TARGET esp32s3)
+# set(IDF_TARGET esp32c3)
 
 # set(EXTRA_COMPONENT_DIRS ./libs/esp-who/components)
 

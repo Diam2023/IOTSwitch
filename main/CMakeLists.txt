@@ -8,12 +8,12 @@ set(COMPONENT_ADD_INCLUDEDIRS
         "./src"
 )
 
-# set(CONFIG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../config)
+set(CONFIG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../config)
 
 register_component()
 
-#if (EXISTS ${CONFIG_DIR})
-#    spiffs_create_partition_image(config ${CONFIG_DIR} FLASH_IN_PROJECT)
-#else ()
-#    message(FATAL_ERROR "${CONFIG_DIR} config file doesn't exit.")
-#endif ()
+if (EXISTS ${CONFIG_DIR})
+    spiffs_create_partition_image(config ${CONFIG_DIR} FLASH_IN_PROJECT)
+else ()
+    message(FATAL_ERROR "${CONFIG_DIR} config file doesn't exit.")
+endif ()

@@ -8,8 +8,10 @@ components
 *.pkg*
 .vscode
 .cache
-
+.pkg
 
 # drawio
 .$*.drawio.*
+
+.dependencies.lock
 

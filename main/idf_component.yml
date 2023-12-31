@@ -3,9 +3,10 @@ dependencies:
   ## Required IDF version
   idf:
     version: ">=5.0"
+  espressif/esp-sr: "~1.5.1"
   ## mdns
   espressif/mdns: "^1.0.3"
-  ## mqtt cxx
+  ## mqtt cxx3
   espressif/esp-idf-cxx: "^1.0.0-beta"
   espressif/esp_mqtt_cxx: "^0.2.0"
   espressif/led_strip: "^2"
