@@ -7,10 +7,9 @@
 
 #include "led_strip.h"
 
-#include "app_speech.hpp"
+#include "app_speech.h"
 
-enum led_mode_t
-{
+enum led_mode_t {
     RGB_OFF = 0,
     RGB_ON = 1,
     RGB_RED = 2,
@@ -19,8 +18,7 @@ enum led_mode_t
 };
 
 
-class AppRGB : public Observer
-{
+class AppRGB : public Observer {
 private:
     const int pin;
     led_strip_handle_t led_strip;

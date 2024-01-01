@@ -1,4 +1,4 @@
-#include "app_rgb.hpp"
+#include "app_rgb.h"
 
 #include "esp_log.h"
 #include "esp_err.h"
@@ -11,9 +11,7 @@
 const static char TAG[] = "App/RGB";
 
 
-
-AppRGB::AppRGB(const int pin, AppSpeech *sr) : pin(pin), sr(sr), mode(led_mode_t::RGB_OFF)
-{
+AppRGB::AppRGB(const int pin, AppSpeech *sr) : pin(pin), sr(sr), mode(led_mode_t::RGB_OFF) {
     // LED strip ws2812 init
     led_strip_config_t strip_config;
     strip_config.strip_gpio_num = this->pin;   // The GPIO that connected to the LED strip's data line
@@ -34,63 +32,58 @@ AppRGB::AppRGB(const int pin, AppSpeech *sr) : pin(pin), sr(sr), mode(led_mode_t
     ESP_LOGI(TAG, "Created LED strip object with RMT backend");
 }
 
-void AppRGB::setRGB(uint32_t red, uint32_t green, uint32_t blue)
-{
+void AppRGB::setRGB(uint32_t red, uint32_t green, uint32_t blue) {
     ESP_ERROR_CHECK(led_strip_set_pixel(this->led_strip, 0, red, green, blue));
     ESP_ERROR_CHECK(led_strip_refresh(led_strip));
 
     ESP_LOGI(TAG, "Set Color %ld %ld %ld", red, green, blue);
 }
 
-void AppRGB::update()
-{
-    if (this->sr->command > COMMAND_NOT_DETECTED)
-    {
+void AppRGB::update() {
+    if (this->sr->command > COMMAND_NOT_DETECTED) {
 
-        switch (this->sr->command)
-        {
-        case MENU_RED:
-            mode = RGB_RED;
-            break;
-        case MENU_GREEN:
-            mode = RGB_GREEN;
-            break;
-        case MENU_BLUE:
-            mode = RGB_BLUE;
-            break;
-        case MENU_OFF:
-            mode = RGB_OFF;
-            break;
-        case MENU_ON:
-            mode = RGB_ON;
-            break;
-        default:
-            break;
+        switch (this->sr->command) {
+            case MENU_RED:
+                mode = RGB_RED;
+                break;
+            case MENU_GREEN:
+                mode = RGB_GREEN;
+                break;
+            case MENU_BLUE:
+                mode = RGB_BLUE;
+                break;
+            case MENU_OFF:
+                mode = RGB_OFF;
+                break;
+            case MENU_ON:
+                mode = RGB_ON;
+                break;
+            default:
+                break;
         }
     }
 
     // do
-    switch (mode)
-    {
-    case RGB_ON:
-        this->setRGB(LED_LIGHT_VALUE, LED_LIGHT_VALUE, LED_LIGHT_VALUE);
-        break;
-    case RGB_OFF:
-        this->setRGB(0, 0, 0);
-        led_strip_clear(led_strip);
-        break;
-    case RGB_RED:
-        this->setRGB(LED_LIGHT_VALUE, 0, 0);
-        break;
-    case RGB_BLUE:
-        this->setRGB(0, LED_LIGHT_VALUE, 0);
-        break;
-    case RGB_GREEN:
-        this->setRGB(0, 0, LED_LIGHT_VALUE);
-        break;
-    default:
-        this->setRGB(0, 0, 0);
-        break;
+    switch (mode) {
+        case RGB_ON:
+            this->setRGB(LED_LIGHT_VALUE, LED_LIGHT_VALUE, LED_LIGHT_VALUE);
+            break;
+        case RGB_OFF:
+            this->setRGB(0, 0, 0);
+            led_strip_clear(led_strip);
+            break;
+        case RGB_RED:
+            this->setRGB(LED_LIGHT_VALUE, 0, 0);
+            break;
+        case RGB_BLUE:
+            this->setRGB(0, LED_LIGHT_VALUE, 0);
+            break;
+        case RGB_GREEN:
+            this->setRGB(0, 0, LED_LIGHT_VALUE);
+            break;
+        default:
+            this->setRGB(0, 0, 0);
+            break;
     }
 
     vTaskDelay(10 / portTICK_PERIOD_MS);

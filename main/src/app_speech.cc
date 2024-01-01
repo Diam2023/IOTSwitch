@@ -1,4 +1,4 @@
-#include "app_speech.hpp"
+#include "app_speech.h"
 
 #include "driver/gpio.h"
 #include "driver/i2s_std.h"
@@ -18,7 +18,7 @@
 
 static const char *TAG = "App/Speech";
 
-static i2s_chan_handle_t                rx_handle = NULL;        // I2S rx channel handler
+static i2s_chan_handle_t rx_handle = NULL;        // I2S rx channel handler
 
 
 #define I2S_CONFIG_DEFAULT(sample_rate, channel_fmt, bits_per_chan) { \
@@ -38,8 +38,7 @@ static i2s_chan_handle_t                rx_handle = NULL;        // I2S rx chann
         }, \
     }
 
-static esp_err_t i2s_init(i2s_port_t i2s_num, uint32_t sample_rate, int channel_format, int bits_per_chan)
-{
+static esp_err_t i2s_init(i2s_port_t i2s_num, uint32_t sample_rate, int channel_format, int bits_per_chan) {
     esp_err_t ret_val = ESP_OK;
 
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(i2s_num, I2S_ROLE_MASTER);
@@ -54,30 +53,27 @@ static esp_err_t i2s_init(i2s_port_t i2s_num, uint32_t sample_rate, int channel_
     return ret_val;
 }
 
-static void feed_handler(AppSpeech *self)
-{
+static void feed_handler(AppSpeech *self) {
     esp_afe_sr_data_t *afe_data = self->afe_data;
     int audio_chunksize = self->afe_handle->get_feed_chunksize(afe_data);
     int nch = self->afe_handle->get_channel_num(afe_data);
     size_t samp_len = audio_chunksize;
     size_t samp_len_bytes = samp_len * I2S_CHANNEL_NUM * sizeof(int32_t);
-    int32_t *i2s_buff = (int32_t *)malloc(samp_len_bytes);
+    int32_t *i2s_buff = (int32_t *) malloc(samp_len_bytes);
     assert(i2s_buff);
     size_t bytes_read;
     // FILE *fp = fopen("/sdcard/out", "a+");
     // if (fp == NULL) ESP_LOGE(TAG,"can not open file\n");
 
-    while (true)
-    {
+    while (true) {
         i2s_channel_read(rx_handle, i2s_buff, samp_len_bytes, &bytes_read, portMAX_DELAY);
 
-        for (int i = 0; i < samp_len; ++i)
-        {
+        for (int i = 0; i < samp_len; ++i) {
             i2s_buff[i] = i2s_buff[i] >> 14; // 32:8为有效位， 8:0为低8位， 全为0， AFE的输入为16位语音数据，拿29：13位是为了对语音信号放大。
         }
         // FatfsComboWrite(i2s_buff, audio_chunksize * I2S_CHANNEL_NUM * sizeof(int16_t), 1, fp);
 
-        self->afe_handle->feed(afe_data, (int16_t *)i2s_buff);
+        self->afe_handle->feed(afe_data, (int16_t *) i2s_buff);
     }
     self->afe_handle->destroy(afe_data);
     if (i2s_buff) {
@@ -87,8 +83,7 @@ static void feed_handler(AppSpeech *self)
     vTaskDelete(NULL);
 }
 
-static void detect_hander(AppSpeech *self)
-{
+static void detect_hander(AppSpeech *self) {
     esp_afe_sr_data_t *afe_data = self->afe_data;
     int afe_chunksize = self->afe_handle->get_fetch_chunksize(afe_data);
     char *mn_name = esp_srmodel_filter(self->models, ESP_MN_PREFIX, ESP_MN_CHINESE);
@@ -108,9 +103,8 @@ static void detect_hander(AppSpeech *self)
 
     self->detected = false;
 
-    while (true)
-    {
-        afe_fetch_result_t* res = self->afe_handle->fetch(afe_data); 
+    while (true) {
+        afe_fetch_result_t *res = self->afe_handle->fetch(afe_data);
         if (!res || res->ret_value == ESP_FAIL) {
             ESP_LOGE(TAG, "fetch error!\n");
             break;
@@ -118,7 +112,7 @@ static void detect_hander(AppSpeech *self)
 
         if (res->wakeup_state == WAKENET_DETECTED) {
             ESP_LOGI(TAG, "WAKEWORD DETECTED\n");
-	        multinet->clean(model_data);  // clean all status of multinet
+            multinet->clean(model_data);  // clean all status of multinet
         } else if (res->wakeup_state == WAKENET_CHANNEL_VERIFIED) {
             ESP_LOGI(TAG, "AFE_FETCH_CHANNEL_VERIFIED, channel index: %d\n", res->trigger_channel_id);
             ESP_LOGI(TAG, ">>> Say your command <<<");
@@ -136,10 +130,11 @@ static void detect_hander(AppSpeech *self)
             } else if (mn_state == ESP_MN_STATE_DETECTED) {
                 esp_mn_results_t *mn_result = multinet->get_results(model_data);
                 for (int i = 0; i < mn_result->num; i++) {
-                    ESP_LOGI(TAG, "TOP %d, command_id: %d, phrase_id: %d, string:%s prob: %f\n", 
-                    i+1, mn_result->command_id[i], mn_result->phrase_id[i], mn_result->string, mn_result->prob[i]);
+                    ESP_LOGI(TAG, "TOP %d, command_id: %d, phrase_id: %d, string:%s prob: %f\n",
+                             i + 1, mn_result->command_id[i], mn_result->phrase_id[i], mn_result->string,
+                             mn_result->prob[i]);
                 }
-                self->command = (command_word_t)mn_result->command_id[0];
+                self->command = (command_word_t) mn_result->command_id[0];
                 self->notify();
                 self->afe_handle->enable_wakenet(afe_data);
                 self->detected = false;
@@ -165,38 +160,38 @@ static void detect_hander(AppSpeech *self)
     vTaskDelete(NULL);
 }
 
-AppSpeech::AppSpeech() : afe_handle(&ESP_AFE_SR_HANDLE), detected(false), command(COMMAND_TIMEOUT)
-{
+AppSpeech::AppSpeech() : afe_handle(&ESP_AFE_SR_HANDLE), detected(false), command(COMMAND_TIMEOUT) {
     this->models = esp_srmodel_init("model");
     i2s_init(I2S_NUM_1, 16000, 2, 32);
     // sd_card_mount("/sdcard");
     afe_config_t afe_config = {
-        .aec_init = true,
-        .se_init = true,
-        .vad_init = true,
-        .wakenet_init = true,
-        .voice_communication_init = false,
-        .voice_communication_agc_init = false,
-        .voice_communication_agc_gain = 15,
-        .vad_mode = VAD_MODE_3,
-        .wakenet_model_name = NULL,
-        .wakenet_model_name_2 = NULL,
-        .wakenet_mode = DET_MODE_2CH_90,
-        .afe_mode = SR_MODE_LOW_COST,
-        .afe_perferred_core = 0,
-        .afe_perferred_priority = 5,
-        .afe_ringbuf_size = 50,
-        .memory_alloc_mode = AFE_MEMORY_ALLOC_MORE_PSRAM,
-        .afe_linear_gain = 1.0,
-        .agc_mode = AFE_MN_PEAK_AGC_MODE_2,
-        .pcm_config = {
-            .total_ch_num = 3,
-            .mic_num = 2,
-            .ref_num = 1,
-            .sample_rate = 16000,
-        },
-        .debug_init = false,
-        .debug_hook = {{AFE_DEBUG_HOOK_MASE_TASK_IN, NULL}, {AFE_DEBUG_HOOK_FETCH_TASK_IN, NULL}},
+            .aec_init = true,
+            .se_init = true,
+            .vad_init = true,
+            .wakenet_init = true,
+            .voice_communication_init = false,
+            .voice_communication_agc_init = false,
+            .voice_communication_agc_gain = 15,
+            .vad_mode = VAD_MODE_3,
+            .wakenet_model_name = NULL,
+            .wakenet_model_name_2 = NULL,
+            .wakenet_mode = DET_MODE_2CH_90,
+            .afe_mode = SR_MODE_LOW_COST,
+            .afe_perferred_core = 0,
+            .afe_perferred_priority = 5,
+            .afe_ringbuf_size = 50,
+            .memory_alloc_mode = AFE_MEMORY_ALLOC_MORE_PSRAM,
+            .afe_linear_gain = 1.0,
+            .agc_mode = AFE_MN_PEAK_AGC_MODE_2,
+            .pcm_config = {
+                    .total_ch_num = 3,
+                    .mic_num = 2,
+                    .ref_num = 1,
+                    .sample_rate = 16000,
+            },
+            .debug_init = false,
+            .debug_hook = {{AFE_DEBUG_HOOK_MASE_TASK_IN,  NULL},
+                           {AFE_DEBUG_HOOK_FETCH_TASK_IN, NULL}},
     };
     afe_config.aec_init = false;
     afe_config.se_init = false;
@@ -210,8 +205,7 @@ AppSpeech::AppSpeech() : afe_handle(&ESP_AFE_SR_HANDLE), detected(false), comman
     this->afe_data = this->afe_handle->create_from_config(&afe_config);
 }
 
-void AppSpeech::run()
-{
-    xTaskCreatePinnedToCore((TaskFunction_t)feed_handler, "App/SR/Feed", 4 * 1024, this, 5, NULL, 0);
-    xTaskCreatePinnedToCore((TaskFunction_t)detect_hander, "App/SR/Detect", 5 * 1024, this, 5, NULL, 0);
+void AppSpeech::run() {
+    xTaskCreatePinnedToCore((TaskFunction_t) feed_handler, "App/SR/Feed", 4 * 1024, this, 5, NULL, 0);
+    xTaskCreatePinnedToCore((TaskFunction_t) detect_hander, "App/SR/Detect", 5 * 1024, this, 5, NULL, 0);
 }

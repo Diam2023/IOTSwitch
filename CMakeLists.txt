@@ -13,8 +13,6 @@ set(CMAKE_BUILD_TYPE Debug)
 set(IDF_TARGET esp32s3)
 # set(IDF_TARGET esp32c3)
 
-# set(EXTRA_COMPONENT_DIRS ./libs/esp-who/components)
-
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
 project(${PROJECT_NAME})

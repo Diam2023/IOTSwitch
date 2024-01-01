@@ -5,7 +5,7 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 
-#include "app_speech.hpp"
+#include "app_speech.h"
 
 class AppLED : public Observer
 {
