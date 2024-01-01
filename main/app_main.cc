@@ -17,4 +17,9 @@ extern "C" void app_main()
     speech->attach(rgb);
 
     speech->run();
+
+
+    auto touch = new AppTouch();
+    // add some
+    touch->run();
 }

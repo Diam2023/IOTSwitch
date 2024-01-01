@@ -2,6 +2,11 @@
 
 To Control Switch Device
 
+## Hardware
+* Touch: GPIO7
+
+
+
 ## Feature
 * MQTT control device
 * Touchpad control
