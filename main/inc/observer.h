@@ -63,7 +63,7 @@ public:
      * Return Data
      * @return
      */
-    std::atomic<D>& operator*() {
+    std::atomic<D> &operator*() {
         return data;
     }
 
