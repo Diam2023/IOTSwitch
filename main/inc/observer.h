@@ -8,17 +8,14 @@
 
 template<typename D>
 class Listener {
-protected:
-    std::function<void(const D &)> callback;
 public:
-    virtual void onListener(const D &d) {
-
-    };
+    virtual void onListener(const D &d) = 0;
 
     Listener() = default;
 
-    template<typename F>
-    Listener(F &&f) : callback(std::forward<F>(f)) {};
+    void operator()(const D &d) {
+        onListener(d);
+    }
 
     virtual ~Listener() = default;
 };
@@ -30,6 +27,9 @@ public:
  */
 template<typename D>
 class LiveData {
+private:
+    void notify(const D &);
+
 protected:
 
     /**
@@ -40,7 +40,7 @@ protected:
     /**
      * Listener list
      */
-    std::list<Listener<D>> listeners;
+    std::list<std::function<void(const D &)>> listeners;
 public:
     LiveData() = default;
 
@@ -49,17 +49,21 @@ public:
     /**
      * Remove From Listener list
      */
-    void remove(const Listener<D> &);
+    void remove(const std::function<void(const D &)> &);
 
-    void append(const Listener<D> &);
+    template<typename F>
+    void append(F &&);
 
-    void notify(const D &);
+    /**
+     * Clear All Listener
+     */
+    void clear();
 
     /**
      * Return Data
      * @return
      */
-    std::atomic<D> operator*() {
+    std::atomic<D>& operator*() {
         return data;
     }
 
@@ -71,19 +75,25 @@ public:
 };
 
 template<typename D>
-void LiveData<D>::notify(const D &d) {
+inline void LiveData<D>::clear() {
+    listeners.clear();
+}
+
+template<typename D>
+template<typename F>
+inline void LiveData<D>::append(F &&f) {
+    listeners.push_back(f);
+}
+
+template<typename D>
+inline void LiveData<D>::notify(const D &d) {
     for (auto &l: listeners) {
-        l.onListener(d);
+        l(d);
     }
 }
 
 template<typename D>
-void LiveData<D>::append(const Listener<D> &l) {
-    listeners.push_back(l);
-}
-
-template<typename D>
-inline void LiveData<D>::remove(const Listener<D> &l) {
+inline void LiveData<D>::remove(const std::function<void(const D &)> &l) {
     listeners.remove(l);
 }
 
