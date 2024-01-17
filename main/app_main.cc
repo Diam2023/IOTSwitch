@@ -21,6 +21,10 @@
 #include "esp_spi_flash.h"
 #include <spi_flash_mmap.h>
 
+
+#include "AppBuzzer.h"
+#include "AppSwitch.h"
+
 static const char *TAG = "MAIN";
 
 void init() {
@@ -92,11 +96,21 @@ extern "C" void app_main() {
 //        ESP_LOGW(TAG, "changed");
 //    });
 
+    AppSwitch::getInstance().append(AppBuzzer::getInstance());
+
     touch->getTouchStatusLiveData().append([](auto &status) {
-        ESP_LOGW(TAG, "Status Changed!");
+        if (status == TouchStatus::TOUCHING) {
+            ESP_LOGW(TAG, "Touching");
+            AppSwitch::getInstance() =
+                    (*AppSwitch::getInstance() == SwitchStatus::Open)
+                    ? SwitchStatus::Close
+                    : SwitchStatus::Open;
+        }
     });
 
     touch->run();
+
+
 
     ESP_LOGI(TAG, "Device SN: %s", AppConfig::getInstance().getDeviceSerialNumber().c_str());
     ESP_LOGI(TAG, "Version: %s", AppConfig::getInstance().getConfigVersion().c_str());
