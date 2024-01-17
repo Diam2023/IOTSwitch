@@ -25,7 +25,8 @@
 #include "VoltageSensor.h"
 #include "SwitchStatusSensor.h"
 #include "TemperatureSensor.h"
-
+#include "SpeechSensor.h"
+#include "AppRgb.h"
 
 static const char *TAG = "MAIN";
 
@@ -105,6 +106,22 @@ extern "C" void app_main() {
     VoltageSensor::getInstance().getCoreTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
     VoltageSensor::getInstance().getOutputSensorVoltage().append(SwitchStatusSensor::getInstance());
 
+    // Important
+    SpeechSensor::getInstance().run();
+    SpeechSensor::getInstance().switchCommandStatus.append([](auto s) {
+        if (s == SwitchStatus::Open) {
+            if (*AppSwitch::getInstance() == SwitchStatus::Close) {
+                AppSwitch::getInstance() = SwitchStatus::Open;
+            }
+        } else {
+            if (*AppSwitch::getInstance() == SwitchStatus::Open) {
+                AppSwitch::getInstance() = SwitchStatus::Close;
+            }
+        }
+    });
+
+    SpeechSensor::getInstance().speechSensorStatus.append(AppRgb::getInstance());
+    AppRgb::getInstance().setRGB(100, 100, 100);
     while (true) {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(500ms);

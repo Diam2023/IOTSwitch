@@ -12,9 +12,6 @@
 
 class AppSwitch final : public LiveData<SwitchStatus> {
 protected:
-
-    void publishStatus();
-
 public:
 
     void setWithoutPublish(const SwitchStatus &status);

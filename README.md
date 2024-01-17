@@ -4,6 +4,13 @@ To Control Switch Device
 
 ## IDF_VERSION V5.1
 
+## TODO List
+
+* [ ] Mqtt Test
+* [ ] RGB BUG Fix
+* [ ] Delete Old API
+* [ ] custom design wakeup word
+
 ## Hardware V0.5
 
 | Pin | Target   | Announce     |
