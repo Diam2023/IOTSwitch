@@ -15,8 +15,8 @@ static const char *TAG = "TEMPERATURE";
 void TemperatureSensor::onListener(const unsigned long &d) {
 
     if (d >= temperatureThreshold) {
-        AppBuzzer::getInstance().beepMicroTimeSync({5, 50});
-        ESP_LOGE(TAG, "TEMPERATURE HEIGHT!!! %lu", d);
+        AppBuzzer::getInstance().beepMicroTimeSync({5, 30});
+        ESP_LOGE(TAG, "TEMPERATURE HEIGHT!!! %lu mV", d);
     }
 }
 

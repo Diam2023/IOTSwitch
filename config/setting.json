@@ -3,7 +3,7 @@
   "beepMute": false,
   "voltageSensor": {
     "outputThreshold": 50,
-    "temperatureThreshold": 1650
+    "temperatureThreshold": 1600
   },
   "touchpad": {
     "notifyThreshold": 100000,
