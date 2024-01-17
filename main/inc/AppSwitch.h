@@ -2,8 +2,8 @@
 // Created by diam on 24-1-17.
 //
 
-#ifndef IOTSWITCH_APP_SWITCH_H
-#define IOTSWITCH_APP_SWITCH_H
+#ifndef IOTSWITCH_APPSWITCH_H
+#define IOTSWITCH_APPSWITCH_H
 
 #include "Observer.h"
 #include "esp_mqtt.hpp"
@@ -13,9 +13,9 @@
 class AppSwitch : LiveData<SwitchStatus> {
 private:
 protected:
-    void set(const SwitchStatus &status);
+    void set(const SwitchStatus &status) {};
 
-    void update(const SwitchStatus &status);
+    void update(const SwitchStatus &status) {};
 
 public:
     AppSwitch() {
@@ -24,4 +24,4 @@ public:
 };
 
 
-#endif //IOTSWITCH_APP_SWITCH_H
+#endif //IOTSWITCH_APPSWITCH_H

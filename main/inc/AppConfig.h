@@ -6,7 +6,7 @@
 #define IOTSWITCH_APPCONFIG_H
 
 #include <string>
-#include "ArduinoJson/Document/StaticJsonDocument.hpp"
+#include <ArduinoJson.hpp>
 
 
 class AppConfig {
@@ -22,11 +22,12 @@ private:
 
     ArduinoJson::StaticJsonDocument<1024> configJson;
 
+    std::string deviceSerialNumber;
+
 public:
-    void load();
+    AppConfig& load();
 
-    void write();
-
+    AppConfig& write();
 
     template<typename S>
     void loadJsonConfig(S &&);
@@ -36,7 +37,20 @@ public:
 
     AppConfig() = default;
 
+    static AppConfig &getInstance() {
+        static AppConfig config;
+        return config;
+    }
+
 public:
+    [[nodiscard]] const std::string &getDeviceSerialNumber() const {
+        return deviceSerialNumber;
+    }
+
+    void setDeviceSerialNumber(const std::string &serialNumber_) {
+        AppConfig::deviceSerialNumber = serialNumber_;
+    }
+
     [[nodiscard]] const std::string &getConfigVersion() const {
         return configVersion;
     }

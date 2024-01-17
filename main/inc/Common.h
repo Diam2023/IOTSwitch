@@ -16,4 +16,7 @@ enum TouchStatus {
     TOUCHING,
 };
 
+
+static constexpr const char *g_pConfigFilePath = "/spiffs/setting.json";
+
 #endif //IOTSWITCH_COMMON_H

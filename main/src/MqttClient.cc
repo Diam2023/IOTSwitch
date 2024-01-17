@@ -5,4 +5,6 @@
 #include "MqttClient.h"
 
 
+void MqttClient::on_connected(esp_mqtt_event_handle_t event) {
 
+}
