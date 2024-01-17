@@ -1,3 +1,11 @@
 {
-  "configVersion": "0.0.1"
+  "configVersion": "0.0.1",
+  "touchpad": {
+    "notifyThreshold": 100000,
+    "touchLimitThreshold": 500
+  },
+  "mqtt": {
+    "host": "mqtt://192168.0.99",
+    "port": 1883
+  }
 }

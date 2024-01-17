@@ -1,20 +1,21 @@
-#pragma once
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
-#include "freertos/task.h"
-#include "driver/gpio.h"
-
-#include "app_speech.h"
-
-class AppLED : public Observer
-{
-private:
-    const gpio_num_t pin;
-    AppSpeech *sr;
-
-public:
-    AppLED(const gpio_num_t pin, AppSpeech *sr);
-
-    void update();
-};
+//#pragma once
+//
+//#include "freertos/FreeRTOS.h"
+//#include "freertos/queue.h"
+//#include "freertos/task.h"
+//#include "driver/gpio.h"
+//
+//#include "app_speech.h"
+//#include "app_touch.h"
+//
+//class AppLED : public Observer
+//{
+//private:
+//    const gpio_num_t pin;
+//    AppSpeech *sr;
+//
+//public:
+//    AppLED(const gpio_num_t pin, AppSpeech *sr, AppTouch *touch);
+//
+//    void update();
+//};

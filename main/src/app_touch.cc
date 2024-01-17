@@ -1,18 +1,19 @@
 //
 // Created by diam on 24-1-1.
 //
-#include "app_touch.h"
+#include "TouchpadSensor.h"
 
 #include <thread>
 
 #include <esp_log.h>
 
 #include <driver/touch_pad.h>
+#include <freertos/FreeRTOS.h>
 
 static const char *TAG = "App/Touch";
 
 
-AppTouch::AppTouch(int64_t notifyThreshold_, std::chrono::microseconds touchLimitThreshold_) : notifyThreshold(
+TouchpadSensor::TouchpadSensor(int64_t notifyThreshold_, std::chrono::microseconds touchLimitThreshold_) : notifyThreshold(
         notifyThreshold_), touchLimitThreshold(touchLimitThreshold_) {
 
     touch_pad_init();
@@ -40,7 +41,7 @@ AppTouch::AppTouch(int64_t notifyThreshold_, std::chrono::microseconds touchLimi
     // Init Touch Pad
 }
 
-[[noreturn]] static void touch_handler(AppTouch *self) {
+[[noreturn]] static void touch_handler(TouchpadSensor *self) {
 
     uint32_t touch_value;
 
@@ -58,8 +59,16 @@ AppTouch::AppTouch(int64_t notifyThreshold_, std::chrono::microseconds touchLimi
         int64_t change = (int64_t) touch_value - pre_touch_value;
         pre_touch_value = touch_value;
         if (change >= self->getNotifyThreshold()) {
-            self->notify();
-            ESP_LOGI(TAG, "Touch Change %lud", touch_value);
+            if (self->getTouchStatus() != TouchStatus::TOUCHING) {
+                self->setTouchStatus(TouchStatus::TOUCHING);
+                ESP_LOGD(TAG, "Change to Touching");
+            }
+            ESP_LOGD(TAG, "Touch Change %lud", touch_value);
+        } else {
+            if (self->getTouchStatus() != TouchStatus::NORMAL) {
+                self->setTouchStatus(TouchStatus::NORMAL);
+                ESP_LOGD(TAG, "Change to Normal");
+            }
         }
 
         ESP_LOGD(TAG, "Touch Val %lud", touch_value);
@@ -67,7 +76,7 @@ AppTouch::AppTouch(int64_t notifyThreshold_, std::chrono::microseconds touchLimi
     }
 }
 
-void AppTouch::run() {
+void TouchpadSensor::run() {
     xTaskCreatePinnedToCore((TaskFunction_t) touch_handler, "App/Touch", 3 * 1024, this, 5, nullptr, 0);
 }
 
