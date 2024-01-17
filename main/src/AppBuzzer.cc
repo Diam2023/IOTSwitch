@@ -74,7 +74,6 @@ void AppBuzzer::onListener(const SwitchStatus &d) {
     ESP_LOGI(TAG, "Beep Task Start");
     using namespace std::chrono_literals;
     while (true) {
-        ESP_LOGW(TAG, "Beep Task count %d", beepTasks->size());
         if (!beepTasks->empty()) {
             auto t = beepTasks->front();
 

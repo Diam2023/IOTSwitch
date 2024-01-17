@@ -21,6 +21,7 @@
 
 #include "AppBuzzer.h"
 #include "AppSwitch.h"
+#include "AppRelay.h"
 
 static const char *TAG = "MAIN";
 
@@ -94,6 +95,7 @@ extern "C" void app_main() {
 //    });
 
     AppSwitch::getInstance().append(AppBuzzer::getInstance());
+    AppSwitch::getInstance().append(AppRelay::getInstance());
 
     touch->getTouchStatusLiveData().append([](auto &status) {
         if (status == TouchStatus::TOUCHING) {
@@ -113,7 +115,6 @@ extern "C" void app_main() {
 
     AppConfig::getInstance().write();
 
-    int i = 1;
     while (true) {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(2s);
