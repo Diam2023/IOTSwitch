@@ -18,9 +18,22 @@ private:
     int64_t touchpadTouchLimitThreshold{};
 
     std::string mqttHost;
-    uint32_t mqttPort;
+    uint32_t mqttPort = 1883;
 
     bool beepMute = false;
+
+    /**
+     * Output Voltage switch threshold
+     */
+    uint32_t outputVoltageThreshold = 50;
+
+    /**
+     * Temperature to warning
+     */
+    uint32_t temperatureVoltageThreshold = 2700;
+
+private:
+
 
     ArduinoJson::StaticJsonDocument<1024> configJson;
 
@@ -45,12 +58,29 @@ public:
     }
 
 public:
+
+    [[nodiscard]] uint32_t getOutputVoltageThreshold() const {
+        return outputVoltageThreshold;
+    }
+
+    void setOutputVoltageThreshold(uint32_t outputVoltageThreshold_) {
+        AppConfig::outputVoltageThreshold = outputVoltageThreshold_;
+    }
+
+    [[nodiscard]] uint32_t getTemperatureVoltageThreshold() const {
+        return temperatureVoltageThreshold;
+    }
+
+    void setTemperatureVoltageThreshold(uint32_t outputVoltageThreshold_) {
+        AppConfig::temperatureVoltageThreshold = outputVoltageThreshold_;
+    }
+
     [[nodiscard]] bool getBeepMute() const {
         return beepMute;
     }
 
-    void setBeepMute(bool mute_) {
-        AppConfig::beepMute = mute_;
+    void setBeepMute(bool beepMute_) {
+        AppConfig::beepMute = beepMute_;
     }
 
     [[nodiscard]] const std::string &getDeviceSerialNumber() const {

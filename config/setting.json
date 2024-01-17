@@ -1,6 +1,10 @@
 {
   "configVersion": "0.0.1",
   "beepMute": false,
+  "voltageSensor": {
+    "outputThreshold": 50,
+    "temperatureThreshold": 1650
+  },
   "touchpad": {
     "notifyThreshold": 100000,
     "touchLimitThreshold": 500

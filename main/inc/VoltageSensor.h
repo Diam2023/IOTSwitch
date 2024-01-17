@@ -29,10 +29,22 @@ protected:
 
     // R1 ADC1_CH5
     LiveData<uint32_t> outputTemperatureSensorVoltage;
+public:
+    LiveData<uint32_t> &getCoreTemperatureSensorVoltage() {
+        return coreTemperatureSensorVoltage;
+    }
+
+    LiveData<uint32_t> &getOutputSensorVoltage() {
+        return outputSensorVoltage;
+    }
+
+    LiveData<uint32_t> &getOutputTemperatureSensorVoltage() {
+        return outputTemperatureSensorVoltage;
+    }
 
 public:
 
-    void readTask();
+    [[noreturn]] void readTask();
 
     uint32_t getVoltage(adc1_channel_t channel);
 

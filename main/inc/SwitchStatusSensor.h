@@ -7,22 +7,26 @@
 
 #include "VoltageSensor.h"
 
+#include "Observer.h"
+
 // This Sensor Use to recognize there is curr running in output
 // That mean another switch in worked
 // Publisher
 // TODO Adc
-class SwitchStatusSensor {
+class SwitchStatusSensor : public Listener<uint32_t> {
 
 private:
+    uint32_t outputThreshold;
 
 protected:
 
 public:
 
+    void onListener(const unsigned long &d) override;
+
     SwitchStatusSensor();
 
-    SwitchStatusSensor& getInstance()
-    {
+    static SwitchStatusSensor &getInstance() {
         static SwitchStatusSensor switchStatusSensor;
         return switchStatusSensor;
     }

@@ -23,6 +23,8 @@
 #include "AppSwitch.h"
 #include "AppRelay.h"
 #include "VoltageSensor.h"
+#include "SwitchStatusSensor.h"
+#include "TemperatureSensor.h"
 
 
 static const char *TAG = "MAIN";
@@ -73,30 +75,11 @@ void init() {
 
 
 extern "C" void app_main() {
-//    auto *speech = new AppSpeech();
-
     init();
 
     using namespace std::chrono_literals;
     auto touch = new TouchpadSensor(AppConfig::getInstance().getTouchpadNotifyThreshold(),
                                     AppConfig::getInstance().getTouchpadTouchLimitThreshold() * 1ms);
-
-//    auto *led = new AppLED(GPIO_NUM_14, speech);
-//    auto *rgb = new AppRGB(13, speech);
-//
-//    speech->attach(led);
-//    speech->attach(rgb);
-//
-//    touch->attach(led);
-//    touch->attach(rgb);
-//
-//    speech->run();
-//    // add some thing
-//    touch->run();
-
-//    Listener<int> l([](const int &i) {
-//        ESP_LOGW(TAG, "changed");
-//    });
 
     AppSwitch::getInstance().append(AppBuzzer::getInstance());
     AppSwitch::getInstance().append(AppRelay::getInstance());
@@ -118,14 +101,11 @@ extern "C" void app_main() {
 
     AppConfig::getInstance().write();
 
+    VoltageSensor::getInstance().getOutputTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
+    VoltageSensor::getInstance().getCoreTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
+    VoltageSensor::getInstance().getOutputSensorVoltage().append(SwitchStatusSensor::getInstance());
 
     while (true) {
-
-
-        auto voltage3 = VoltageSensor::getInstance().getVoltage(ADC1_CHANNEL_3);
-        auto voltage4 = VoltageSensor::getInstance().getVoltage(ADC1_CHANNEL_4);
-        auto voltage5 = VoltageSensor::getInstance().getVoltage(ADC1_CHANNEL_5);
-        ESP_LOGI(TAG, "3: %lu mV \n 4: %lu mV \n 5: %lu mV", voltage3, voltage4, voltage5);
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(500ms);
     }

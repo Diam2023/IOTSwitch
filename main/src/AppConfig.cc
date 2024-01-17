@@ -64,6 +64,13 @@ void AppConfig::loadJsonConfig(S &&stream) {
         this->setBeepMute(configJson["beepMute"]);
     }
 
+    if (!configJson["voltageSensor"]["outputThreshold"].isNull()) {
+        this->setOutputVoltageThreshold(configJson["voltageSensor"]["outputThreshold"]);
+    }
+    if (!configJson["voltageSensor"]["temperatureThreshold"].isNull()) {
+        this->setTemperatureVoltageThreshold(configJson["voltageSensor"]["temperatureThreshold"]);
+    }
+
     if (!configJson["deviceSerialNumber"].isNull()) {
         this->setDeviceSerialNumber(configJson["deviceSerialNumber"]);
     } else {
@@ -109,6 +116,8 @@ void AppConfig::writeJsonConfig(S &&stream) {
     configJson["mqtt"]["host"] = this->getMqttHost();
     configJson["mqtt"]["port"] = this->getMqttPort();
     configJson["beepMute"] = this->getBeepMute();
+    configJson["voltageSensor"]["outputThreshold"] = this->getOutputVoltageThreshold();
+    configJson["voltageSensor"]["temperatureThreshold"] = this->getTemperatureVoltageThreshold();
 
     // Ignore SN
 

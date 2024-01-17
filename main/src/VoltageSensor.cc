@@ -29,7 +29,7 @@ VoltageSensor::VoltageSensor() {
     ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_12));
 
 
-    readThread = std::make_shared<std::thread>(&VoltageSensor::readThread, this);
+    readThread = std::make_shared<std::thread>(&VoltageSensor::readTask, this);
 }
 
 uint32_t VoltageSensor::getVoltage(adc1_channel_t channel) {
@@ -40,22 +40,31 @@ uint32_t VoltageSensor::getVoltage(adc1_channel_t channel) {
     return resultVoltage;
 }
 
-void VoltageSensor::readTask() {
+[[noreturn]] void VoltageSensor::readTask() {
+    using namespace std::chrono_literals;
 
-    uint32_t coreTempVol = getVoltage(ADC1_CHANNEL_3);
-    uint32_t outputVol = getVoltage(ADC1_CHANNEL_4);
-    uint32_t outputTempVol = getVoltage(ADC1_CHANNEL_5);
+    ESP_LOGI(TAG, "Read Task Start");
 
-    if (*coreTemperatureSensorVoltage != coreTempVol) {
-        coreTemperatureSensorVoltage = coreTempVol;
+    while (true) {
+        uint32_t coreTempVol = getVoltage(ADC1_CHANNEL_3);
+        uint32_t outputVol = getVoltage(ADC1_CHANNEL_4);
+        uint32_t outputTempVol = getVoltage(ADC1_CHANNEL_5);
+
+        if (*coreTemperatureSensorVoltage != coreTempVol) {
+            coreTemperatureSensorVoltage = coreTempVol;
+        }
+
+        if (*outputSensorVoltage != outputVol) {
+            ESP_LOGW(TAG, "Update outputSensor Voltage");
+            outputSensorVoltage = outputVol;
+        }
+
+        if (*outputTemperatureSensorVoltage != outputTempVol) {
+            outputTemperatureSensorVoltage = outputTempVol;
+        }
+
+        std::this_thread::sleep_for(700ms);
     }
 
-    if (*outputSensorVoltage != outputVol) {
-        outputSensorVoltage = outputVol;
-    }
-
-    if (*outputTemperatureSensorVoltage != outputTempVol) {
-        outputTemperatureSensorVoltage = outputTempVol;
-    }
-
+    ESP_LOGW(TAG, "Read Task End");
 }
