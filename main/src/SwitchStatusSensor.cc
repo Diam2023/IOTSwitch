@@ -3,3 +3,9 @@
 //
 
 #include "SwitchStatusSensor.h"
+
+#include "VoltageSensor.h"
+
+SwitchStatusSensor::SwitchStatusSensor() {
+    VoltageSensor::getInstance();
+}

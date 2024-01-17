@@ -22,8 +22,7 @@ AppBuzzer::AppBuzzer() : targetPin(13), beepThread(), beepTasks() {
             .duty_resolution  = LEDC_DUTY_RES,
             .timer_num        = LEDC_TIMER,
             .freq_hz          = LEDC_FREQUENCY,  // Set output frequency at 4 kHz
-            .clk_cfg          = LEDC_AUTO_CLK,
-            .deconfigure      = false
+            .clk_cfg          = LEDC_AUTO_CLK
     };
     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
 

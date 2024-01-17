@@ -5,12 +5,13 @@
 #ifndef IOTSWITCH_TEMPERATURESENSORE_H
 #define IOTSWITCH_TEMPERATURESENSORE_H
 
+#include "VoltageSensor.h"
 
 
-class TemperatureSensore {
+// TODO Get Adc
+class TemperatureSensor {
 
 };
-
 
 
 #endif //IOTSWITCH_TEMPERATURESENSORE_H

@@ -22,6 +22,8 @@
 #include "AppBuzzer.h"
 #include "AppSwitch.h"
 #include "AppRelay.h"
+#include "VoltageSensor.h"
+
 
 static const char *TAG = "MAIN";
 
@@ -69,8 +71,10 @@ void init() {
     AppConfig::getInstance().load();
 }
 
+
 extern "C" void app_main() {
 //    auto *speech = new AppSpeech();
+
     init();
 
     using namespace std::chrono_literals;
@@ -109,14 +113,20 @@ extern "C" void app_main() {
 
     touch->run();
 
-
     ESP_LOGI(TAG, "Device SN: %s", AppConfig::getInstance().getDeviceSerialNumber().c_str());
     ESP_LOGI(TAG, "Version: %s", AppConfig::getInstance().getConfigVersion().c_str());
 
     AppConfig::getInstance().write();
 
+
     while (true) {
+
+
+        auto voltage3 = VoltageSensor::getInstance().getVoltage(ADC1_CHANNEL_3);
+        auto voltage4 = VoltageSensor::getInstance().getVoltage(ADC1_CHANNEL_4);
+        auto voltage5 = VoltageSensor::getInstance().getVoltage(ADC1_CHANNEL_5);
+        ESP_LOGI(TAG, "3: %lu mV \n 4: %lu mV \n 5: %lu mV", voltage3, voltage4, voltage5);
         using namespace std::chrono_literals;
-        std::this_thread::sleep_for(2s);
+        std::this_thread::sleep_for(500ms);
     }
 }

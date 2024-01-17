@@ -1,12 +1,10 @@
 #pragma once
 
 #include "Observer.h"
-#include <soc/gpio_num.h>
 #include "Common.h"
 
 #include <thread>
 #include <deque>
-
 
 struct BeepTask {
     int count;
