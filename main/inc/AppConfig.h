@@ -18,16 +18,16 @@ private:
     int64_t touchpadTouchLimitThreshold{};
 
     std::string mqttHost;
-    std::string mqttPort;
+    uint32_t mqttPort;
 
     ArduinoJson::StaticJsonDocument<1024> configJson;
 
     std::string deviceSerialNumber;
 
 public:
-    AppConfig& load();
+    AppConfig &load();
 
-    AppConfig& write();
+    AppConfig &write();
 
     template<typename S>
     void loadJsonConfig(S &&);
@@ -83,11 +83,11 @@ public:
         AppConfig::mqttHost = mqttHost_;
     }
 
-    [[nodiscard]] const std::string &getMqttPort() const {
+    [[nodiscard]] const uint32_t &getMqttPort() const {
         return mqttPort;
     }
 
-    void setMqttPort(const std::string &mqttPort_) {
+    void setMqttPort(uint32_t mqttPort_) {
         AppConfig::mqttPort = mqttPort_;
     }
 

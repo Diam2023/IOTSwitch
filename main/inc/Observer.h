@@ -67,7 +67,7 @@ public:
         return data;
     }
 
-    LiveData<D> &operator=(const D &d) {
+    virtual LiveData<D> &operator=(const D &d) {
         data = d;
         notify(d);
         return *this;

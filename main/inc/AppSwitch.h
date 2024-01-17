@@ -10,17 +10,24 @@
 #include "esp_mqtt_client_config.hpp"
 #include "Common.h"
 
-class AppSwitch : LiveData<SwitchStatus> {
-private:
+class AppSwitch final : public LiveData<SwitchStatus> {
 protected:
-    void set(const SwitchStatus &status) {};
 
-    void update(const SwitchStatus &status) {};
+    void publishStatus();
 
 public:
-    AppSwitch() {
-        data = SwitchStatus::Close;
+
+    void setWithoutPublish(const SwitchStatus &status);
+
+    AppSwitch &operator=(const SwitchStatus &status) override;
+
+    AppSwitch() : LiveData<SwitchStatus>(SwitchStatus::Close) {
     };
+
+    static AppSwitch &getInstance() {
+        static AppSwitch appSwitch;
+        return appSwitch;
+    }
 };
 
 

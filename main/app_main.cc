@@ -63,14 +63,18 @@ void init() {
 
     setenv("TZ", "CST-8", 1);
     tzset();
+
+    AppConfig::getInstance().load();
 }
 
 extern "C" void app_main() {
 //    auto *speech = new AppSpeech();
     init();
-    auto touch = new TouchpadSensor();
 
-//
+    using namespace std::chrono_literals;
+    auto touch = new TouchpadSensor(AppConfig::getInstance().getTouchpadNotifyThreshold(),
+                                    AppConfig::getInstance().getTouchpadTouchLimitThreshold() * 1ms);
+
 //    auto *led = new AppLED(GPIO_NUM_14, speech);
 //    auto *rgb = new AppRGB(13, speech);
 //
@@ -93,8 +97,6 @@ extern "C" void app_main() {
     });
 
     touch->run();
-
-    AppConfig::getInstance().load();
 
     ESP_LOGI(TAG, "Device SN: %s", AppConfig::getInstance().getDeviceSerialNumber().c_str());
     ESP_LOGI(TAG, "Version: %s", AppConfig::getInstance().getConfigVersion().c_str());
