@@ -60,23 +60,26 @@ void AppConfig::loadJsonConfig(S &&stream) {
     if (!configJson["mqtt"]["port"].isNull()) {
         this->setMqttPort(configJson["mqtt"]["port"]);
     }
-
-    if (configJson["deviceSerialNumber"].isNull()) {
-
+    if (!configJson["beepMute"].isNull()) {
+        this->setBeepMute(configJson["beepMute"]);
     }
 
-    std::string SN = configJson["deviceSerialNumber"];
-    if (SN.length() < 16) {
-        uint8_t macAddress[8];
-        char macAddressString[17];
-        if (readFactorySetMacAddress(macAddress)) {
-            sprintf(macAddressString, "%02X%02X%02X%02X%02X%02X%02X%02X", (uint16_t) macAddress[0],
-                    (uint16_t) macAddress[1], (uint16_t) macAddress[2], (uint16_t) macAddress[3],
-                    (uint16_t) macAddress[4],
-                    (uint16_t) macAddress[5], (uint16_t) macAddress[6], (uint16_t) macAddress[7]);
-            this->setDeviceSerialNumber(std::string(macAddressString));
-        } else {
-            ESP_LOGE(TAG, "FAULT ERROR: SN Not Found!");
+    if (!configJson["deviceSerialNumber"].isNull()) {
+        this->setDeviceSerialNumber(configJson["deviceSerialNumber"]);
+    } else {
+        std::string SN = configJson["deviceSerialNumber"];
+        if (SN.length() < 16) {
+            uint8_t macAddress[8];
+            char macAddressString[17];
+            if (readFactorySetMacAddress(macAddress)) {
+                sprintf(macAddressString, "%02X%02X%02X%02X%02X%02X%02X%02X", (uint16_t) macAddress[0],
+                        (uint16_t) macAddress[1], (uint16_t) macAddress[2], (uint16_t) macAddress[3],
+                        (uint16_t) macAddress[4],
+                        (uint16_t) macAddress[5], (uint16_t) macAddress[6], (uint16_t) macAddress[7]);
+                this->setDeviceSerialNumber(std::string(macAddressString));
+            } else {
+                ESP_LOGE(TAG, "FAULT ERROR: SN Not Found!");
+            }
         }
     }
 }
@@ -105,6 +108,7 @@ void AppConfig::writeJsonConfig(S &&stream) {
     configJson["touchpad"]["touchLimitThreshold"] = this->getTouchpadTouchLimitThreshold();
     configJson["mqtt"]["host"] = this->getMqttHost();
     configJson["mqtt"]["port"] = this->getMqttPort();
+    configJson["beepMute"] = this->getBeepMute();
 
     // Ignore SN
 

@@ -20,6 +20,8 @@ private:
     std::string mqttHost;
     uint32_t mqttPort;
 
+    bool beepMute = false;
+
     ArduinoJson::StaticJsonDocument<1024> configJson;
 
     std::string deviceSerialNumber;
@@ -43,6 +45,14 @@ public:
     }
 
 public:
+    [[nodiscard]] bool getBeepMute() const {
+        return beepMute;
+    }
+
+    void setBeepMute(bool mute_) {
+        AppConfig::beepMute = mute_;
+    }
+
     [[nodiscard]] const std::string &getDeviceSerialNumber() const {
         return deviceSerialNumber;
     }

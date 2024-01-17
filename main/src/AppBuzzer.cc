@@ -1,4 +1,5 @@
 #include "AppBuzzer.h"
+#include "AppConfig.h"
 
 #include <esp_log.h>
 
@@ -77,7 +78,11 @@ void AppBuzzer::onListener(const SwitchStatus &d) {
         if (!beepTasks->empty()) {
             auto t = beepTasks->front();
 
-            beepMicroTimeSync(t);
+            if (!AppConfig::getInstance().getBeepMute()) {
+                beepMicroTimeSync(t);
+            } else {
+                ESP_LOGW(TAG, "Mute");
+            }
 
             beepTasks->pop_front();
 

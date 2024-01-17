@@ -1,5 +1,6 @@
 {
   "configVersion": "0.0.1",
+  "beepMute": false,
   "touchpad": {
     "notifyThreshold": 100000,
     "touchLimitThreshold": 500

@@ -17,10 +17,7 @@
 #include <nvs_flash.h>
 #include <esp_netif.h>
 #include <esp_pm.h>
-#include "esp_spiffs.h"
-#include "esp_spi_flash.h"
-#include <spi_flash_mmap.h>
-
+#include <esp_spiffs.h>
 
 #include "AppBuzzer.h"
 #include "AppSwitch.h"
@@ -109,7 +106,6 @@ extern "C" void app_main() {
     });
 
     touch->run();
-
 
 
     ESP_LOGI(TAG, "Device SN: %s", AppConfig::getInstance().getDeviceSerialNumber().c_str());
