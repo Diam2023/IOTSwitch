@@ -11,3 +11,6 @@ dependencies:
   espressif/esp_mqtt_cxx: "^0.2.0"
   espressif/led_strip: "^2"
   bblanchon/arduinojson: "^6.21.2"
+  diam2023/ok_wifi:
+    version: components
+    git: git@github.com:Diam2023/OkWifi.git
