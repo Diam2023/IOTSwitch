@@ -12,6 +12,8 @@
 #include <thread>
 #include <fstream>
 
+#include "VoltageSensor.h"
+
 static const char *TAG = "MqttClient";
 
 MqttClient::MqttClient(const idf::mqtt::BrokerConfiguration &broker, const idf::mqtt::ClientCredentials &credentials,
@@ -22,6 +24,7 @@ MqttClient::MqttClient(const idf::mqtt::BrokerConfiguration &broker, const idf::
     std::stringstream configFilterString;
     std::stringstream statusFilterString;
     std::stringstream settingFilterString;
+    std::stringstream warningFilterString;
 
     // Sub
     actionFilterString << "devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/action";
@@ -30,12 +33,14 @@ MqttClient::MqttClient(const idf::mqtt::BrokerConfiguration &broker, const idf::
     // Pub
     statusFilterString << "devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/status";
     configFilterString << "devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/config";
+    warningFilterString << "devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/warning";
 
     actionFilterPtr = std::make_unique<idf::mqtt::Filter>(actionFilterString.str());
     settingFilterPtr = std::make_unique<idf::mqtt::Filter>(settingFilterString.str());
 
     statusFilterPtr = std::make_unique<idf::mqtt::Filter>(statusFilterString.str());
     configFilterPtr = std::make_unique<idf::mqtt::Filter>(configFilterString.str());
+    warningFilterPtr = std::make_unique<idf::mqtt::Filter>(warningFilterString.str());
 
     ESP_LOGI(TAG, "Subscribe Data Filter: %s", actionFilterPtr->get().c_str());
     ESP_LOGI(TAG, "Subscribe Config Filter: %s", configFilterPtr->get().c_str());
@@ -96,6 +101,8 @@ void MqttClient::on_disconnected(esp_mqtt_event_handle_t event) {
     connectionStatusLiveData = MqttConnectionStatus::MqttDisconnected;
 }
 
+ArduinoJson::StaticJsonDocument<1024> staticJsonDocument;
+
 void MqttClient::publishStatus() {
     if (*connectionStatusLiveData != MqttConnectionStatus::MqttConnected) {
         ESP_LOGW(TAG, "Mqtt Not Connected");
@@ -103,11 +110,19 @@ void MqttClient::publishStatus() {
     }
 
     SwitchStatus status = *AppSwitch::getInstance();
-    ArduinoJson::DynamicJsonDocument dynamicJsonDocument(1024);
     bool statusBool = (status == SwitchStatus::Open);
-    dynamicJsonDocument["status"] = statusBool;
+    staticJsonDocument.clear();
+    staticJsonDocument["status"] = statusBool;
+
+    static uint32_t coreTemp;
+    static uint32_t switchTemp;
+    coreTemp = *VoltageSensor::getInstance().getCoreTemperatureSensorVoltage();
+    switchTemp = *VoltageSensor::getInstance().getOutputTemperatureSensorVoltage();
+    staticJsonDocument["coreTemperature"] = coreTemp;
+    staticJsonDocument["switchTemperature"] = switchTemp;
+
     std::string data;
-    ArduinoJson::serializeJson(dynamicJsonDocument, data);
+    ArduinoJson::serializeJson(staticJsonDocument, data);
     if (data.empty()) {
         ESP_LOGE(TAG, "publish Empty");
         return;
@@ -118,6 +133,10 @@ void MqttClient::publishStatus() {
 }
 
 void MqttClient::publishConfig() {
+    if (*connectionStatusLiveData != MqttConnectionStatus::MqttConnected) {
+        ESP_LOGW(TAG, "Mqtt Not Connected");
+        return;
+    }
     AppConfig::getInstance().write();
 
     std::ifstream ifs(g_pConfigFilePath, std::ifstream::in);
@@ -126,6 +145,21 @@ void MqttClient::publishConfig() {
     std::string jsonString(buffer.str());
 
     publish(configFilterPtr->get(), jsonString.begin(), jsonString.end());
+}
+
+void MqttClient::publishWarning(const std::string &msg) {
+    if (*connectionStatusLiveData != MqttConnectionStatus::MqttConnected) {
+        ESP_LOGW(TAG, "Mqtt Not Connected");
+        return;
+    }
+    staticJsonDocument.clear();
+    staticJsonDocument["message"] = msg;
+    std::string jsonString;
+    ArduinoJson::serializeJson(staticJsonDocument, jsonString);
+    // At least once
+    ESP_LOGI(TAG, "Publish Warning!");
+    publish(warningFilterPtr->get(), jsonString.begin(), jsonString.end());
+
 }
 
 MqttClient::~MqttClient() = default;
@@ -150,7 +184,11 @@ void MqttClientManager::build() {
     vTaskDelete(nullptr);
 }
 
+
+static std::mutex entryLock;
+
 std::shared_ptr<MqttClient> &MqttClientManager::getClient() {
+    entryLock.lock();
     if (!clientPtr) {
         TaskHandle_t handler;
         xTaskCreatePinnedToCore((TaskFunction_t) build, "MqttBuilder", 5 * 1024, nullptr, 5, &handler, 1);
@@ -158,5 +196,6 @@ std::shared_ptr<MqttClient> &MqttClientManager::getClient() {
         xSemaphoreTake(binarySemaphore, portMAX_DELAY);
         ESP_LOGI(TAG, "MqttClient Created");
     }
+    entryLock.unlock();
     return clientPtr;
 }

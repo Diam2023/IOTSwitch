@@ -45,6 +45,11 @@ private:
     std::unique_ptr<idf::mqtt::Filter> configFilterPtr;
 
     /**
+     * Publish Warning For Publish
+     */
+    std::unique_ptr<idf::mqtt::Filter> warningFilterPtr;
+
+    /**
      * LiveData Status For Mqtt
      */
     LiveData<MqttConnectionStatus> connectionStatusLiveData;
@@ -61,6 +66,7 @@ public:
 
     void publishStatus();
     void publishConfig();
+    void publishWarning(const std::string& msg);
 
     LiveData<MqttConnectionStatus> &getConnectionStatusLiveData() {
         return connectionStatusLiveData;
