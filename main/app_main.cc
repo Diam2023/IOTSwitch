@@ -76,13 +76,13 @@ extern "C" void app_main() {
     AppNetwork::getInstance().getNetworkStatusLiveData().append([](auto s) {
         if (s == NetworkStatus::Connected) {
             ESP_LOGI(TAG, "Connected!");
-            AppConfig::getInstance().write();
+            MqttClientManager::getClient();
         } else {
             ESP_LOGI(TAG, "Err Connection!");
         }
     });
 
-    AppNetwork::getInstance().start();
+    AppNetwork::asyncStart();
 
     using namespace std::chrono_literals;
     auto touch = new TouchpadSensor(AppConfig::getInstance().getTouchpadNotifyThreshold(),
@@ -126,11 +126,15 @@ extern "C" void app_main() {
         }
     });
 
-    SpeechSensor::getInstance().speechSensorStatus.append(AppRgb::getInstance());
-    SpeechSensor::getInstance().speechSensorStatus.append([](auto s) {
-        AppBuzzer::getInstance().beepMicroTimeAsync({1, 50});
+//    SpeechSensor::getInstance().speechSensorStatus.append(AppRgb::getInstance());
+    SpeechSensor::getInstance().speechSensorStatus.append([](const SpeechSensorStatus &s) {
+        if ((s.status == SpeechStatus::Detecting) && (s.command < 0)) {
+            AppBuzzer::getInstance().beepMicroTimeAsync({1, 50});
+        }
     });
-    AppRgb::getInstance().setRGB(100, 100, 100);
+
+//    AppRgb::getInstance().setRGB(100, 100, 100);
+
     while (true) {
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(500ms);
