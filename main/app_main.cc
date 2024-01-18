@@ -78,11 +78,17 @@ extern "C" void app_main() {
     AppNetwork::getInstance().getNetworkStatusLiveData().append([](auto s) {
         if (s == NetworkStatus::Connected) {
             ESP_LOGI(TAG, "Connected!");
-            MqttClientManager::getClient();
+            MqttClientManager::getClient()->getConnectionStatusLiveData().append([](auto s) {
+                if (s == MqttConnectionStatus::MqttConnected) {
+                    // Online Flag
+                    MqttClientManager::getClient()->publishStatus();
+                }
+            });
         } else {
             ESP_LOGI(TAG, "Err Connection!");
         }
     });
+
 
     AppNetwork::asyncStart();
 
