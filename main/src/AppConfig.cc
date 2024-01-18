@@ -78,7 +78,17 @@ void AppConfig::loadJsonConfig(S &&stream) {
         this->setWifiPwd(configJson["wifi"]["pwd"]);
     }
 
-    {
+
+    bool findSN = false;
+    if (!configJson["SN"].isNull()) {
+        std::string SN = configJson["SN"];
+        if (!SN.empty()) {
+            this->setDeviceSerialNumber(SN);
+            ESP_LOGW(TAG, "SN Read From Config: %s", SN.c_str());
+            findSN = true;
+        }
+    }
+    if (!findSN) {
         uint8_t macAddress[8];
         char macAddressString[17];
         if (readFactorySetMacAddress(macAddress)) {
@@ -96,7 +106,6 @@ void AppConfig::loadJsonConfig(S &&stream) {
 AppConfig &AppConfig::write() {
 
     try {
-
         std::ofstream ofs(g_pConfigFilePath, std::ofstream::out);
         writeJsonConfig(ofs);
         ESP_LOGD(TAG, "write successful!");
@@ -123,7 +132,7 @@ void AppConfig::writeJsonConfig(S &&stream) {
     configJson["wifi"]["ssid"] = this->getWifiSsid();
     configJson["wifi"]["pwd"] = this->getWifiPwd();
 
-    // Ignore SN
+    configJson["SN"] = this->getDeviceSerialNumber();
 
     // encode This Json
     ArduinoJson::serializeJson(configJson, stream);
