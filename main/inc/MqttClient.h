@@ -15,9 +15,9 @@
 
 
 enum MqttConnectionStatus {
-    Init,
-    Connected,
-    Disconnected
+    MqttInit,
+    MqttConnected,
+    MqttDisconnected
 };
 
 
@@ -39,6 +39,11 @@ private:
      * LiveData Status For Mqtt
      */
     LiveData<MqttConnectionStatus> connectionStatusLiveData;
+
+    /**
+     * Just for publish
+     */
+    std::unique_ptr<idf::mqtt::Filter> statusFilterPtr;
 
 protected:
 

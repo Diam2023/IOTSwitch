@@ -14,15 +14,19 @@ static const char *TAG = "MqttClient";
 
 MqttClient::MqttClient(const idf::mqtt::BrokerConfiguration &broker, const idf::mqtt::ClientCredentials &credentials,
                        const idf::mqtt::Configuration &config) : idf::mqtt::Client(broker, credentials, config),
-                                                                 connectionStatusLiveData(MqttConnectionStatus::Init) {
+                                                                 connectionStatusLiveData(
+                                                                         MqttConnectionStatus::MqttInit) {
     std::stringstream dataFilterString;
     std::stringstream configFilterString;
+    std::stringstream statusFilterString;
 
-    dataFilterString << "$SYS/devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/data";
-    configFilterString << "$SYS/devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/config";
+    dataFilterString << "devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/data";
+    configFilterString << "devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/config";
+    statusFilterString << "devices/" << AppConfig::getInstance().getDeviceSerialNumber() << "/status";
 
     dataFilterPtr = std::make_unique<idf::mqtt::Filter>(dataFilterString.str());
     configFilterPtr = std::make_unique<idf::mqtt::Filter>(configFilterString.str());
+    statusFilterPtr = std::make_unique<idf::mqtt::Filter>(statusFilterString.str());
 
     ESP_LOGI(TAG, "Subscribe Data Filter: %s", dataFilterPtr->get().c_str());
     ESP_LOGI(TAG, "Subscribe Config Filter: %s", configFilterPtr->get().c_str());
@@ -31,7 +35,7 @@ MqttClient::MqttClient(const idf::mqtt::BrokerConfiguration &broker, const idf::
 void MqttClient::on_connected(esp_mqtt_event_handle_t event) {
     subscribe(dataFilterPtr->get(), idf::mqtt::QoS::AtMostOnce);
     subscribe(configFilterPtr->get(), idf::mqtt::QoS::AtMostOnce);
-    connectionStatusLiveData = MqttConnectionStatus::Connected;
+    connectionStatusLiveData = MqttConnectionStatus::MqttConnected;
 }
 
 void MqttClient::on_data(esp_mqtt_event_handle_t event) {
@@ -40,34 +44,54 @@ void MqttClient::on_data(esp_mqtt_event_handle_t event) {
         ESP_LOGW(TAG, "Ignore MqttClient Config Empty Data");
         return;
     }
-    std::stringstream ss;
-    ss << jsonConfig.c_str();
     if (configFilterPtr->match(event->topic, event->topic_len)) {
-        AppConfig::getInstance().writeJsonConfig(ss);
+        AppConfig::getInstance().loadJsonConfig(jsonConfig);
+        AppConfig::getInstance().write();
     } else if (dataFilterPtr->match(event->topic, event->topic_len)) {
         ArduinoJson::DynamicJsonDocument dynamicJsonDocument(1024);
-        auto error = ArduinoJson::deserializeJson(dynamicJsonDocument, ss);
+        auto error = ArduinoJson::deserializeJson(dynamicJsonDocument, jsonConfig);
         if (error) {
             ESP_LOGW(TAG, "Deserialize Json Data Error");
             return;
         }
-        auto switchJson = dynamicJsonDocument["data"];
-        if (!switchJson.isNull()) {
-            auto setStatus = ((bool) switchJson) ? SwitchStatus::Open : SwitchStatus::Close;
-            // Skip Callback loop!
-            AppSwitch::getInstance().setWithoutPublish(setStatus);
-        } else {
-            ESP_LOGW(TAG, "Json Data null");
+
+        std::string action = dynamicJsonDocument["action"];
+        if (action.empty()) {
+            return;
+        }
+        if (action == "setStatus") {
+            auto switchJson = dynamicJsonDocument["status"];
+            if (!switchJson.isNull()) {
+                auto setStatus = ((bool) switchJson) ? SwitchStatus::Open : SwitchStatus::Close;
+                // Skip Callback loop!
+                AppSwitch::getInstance().setWithoutPublish(setStatus);
+            } else {
+                ESP_LOGW(TAG, "Json Data null");
+            }
+        } else if (action == "restart") {
+            ESP_LOGW(TAG, "Restart");
+            AppConfig::getInstance().write();
+            esp_restart();
+        } else if (action == "getStatus") {
+            ESP_LOGI(TAG, "Get Status");
+            publishStatus();
+        } else if (action == "getConfig") {
+            // TODO Wait Complete
         }
     }
 }
 
 void MqttClient::on_disconnected(esp_mqtt_event_handle_t event) {
     Client::on_disconnected(event);
-    connectionStatusLiveData = MqttConnectionStatus::Disconnected;
+    connectionStatusLiveData = MqttConnectionStatus::MqttDisconnected;
 }
 
 void MqttClient::publishStatus() {
+    if (*connectionStatusLiveData != MqttConnectionStatus::MqttConnected) {
+        ESP_LOGW(TAG, "Mqtt Not Connected");
+        return;
+    }
+
     SwitchStatus status = *AppSwitch::getInstance();
     ArduinoJson::DynamicJsonDocument dynamicJsonDocument(1024);
     bool statusBool = (status == SwitchStatus::Open);
@@ -79,8 +103,8 @@ void MqttClient::publishStatus() {
         return;
     }
     // At least once
-    ESP_LOGE(TAG, "Publish Now Status!");
-    publish(dataFilterPtr->get(), data.begin(), data.end());
+    ESP_LOGI(TAG, "Publish Now Status!");
+    publish(statusFilterPtr->get(), data.begin(), data.end());
 }
 
 MqttClient::~MqttClient() = default;
