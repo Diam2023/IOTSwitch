@@ -9,8 +9,12 @@
     "notifyThreshold": 100000,
     "touchLimitThreshold": 500
   },
+  "wifi": {
+    "ssid": "",
+    "pwd": ""
+  },
   "mqtt": {
-    "host": "mqtt://192168.0.99",
+    "host": "mqtt://192.168.0.99",
     "port": 1883
   },
   "deviceSerialNumber": ""
