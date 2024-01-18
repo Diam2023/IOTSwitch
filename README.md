@@ -6,10 +6,34 @@ To Control Switch Device
 
 ## TODO List
 
-* [ ] Mqtt Test
 * [ ] RGB BUG Fix
 * [ ] Delete Old API
 * [ ] custom design wakeup word
+
+## Mqtt
+
+### Publish
+
+| topic               | message      | format                   |
+|---------------------|--------------|--------------------------|
+| devices/{SN}/status | DeviceStatus | {"status":bool}          |
+| devices/{SN}/config | DeviceConfig | {"config...":"value..."} |
+
+### Subscribe
+
+| topic                | message       | format                     |
+|----------------------|---------------|----------------------------|
+| devices/{SN}/setting | DeviceSetting | {"setting...": "value..."} |
+| devices/{SN}/action  | DeviceAction  | {"action": "..."}          |
+
+#### Action List
+
+| action         | value     | sub data         | announce       |
+|----------------|-----------|------------------|----------------|
+| set status     | setStatus | {"status": bool} | NON            |
+| system restart | restart   | NON              | NON            |
+| get status     | getStatus | NON              | publish status |
+| get config     | getConfig | NON              | publish config |
 
 ## Hardware V0.5
 
