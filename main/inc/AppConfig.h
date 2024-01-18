@@ -32,8 +32,16 @@ private:
      */
     uint32_t temperatureVoltageThreshold = 2700;
 
-private:
+    /**
+     * SSID For Wifi
+     */
+    std::string wifiSsid;
 
+    /**
+     * PWD For Wifi
+     */
+    std::string wifiPwd;
+private:
 
     ArduinoJson::StaticJsonDocument<1024> configJson;
 
@@ -58,6 +66,21 @@ public:
     }
 
 public:
+    [[nodiscard]] const std::string &getWifiSsid() const {
+        return wifiSsid;
+    }
+
+    void setWifiSsid(const std::string &wifiSsid_) {
+        AppConfig::wifiSsid = wifiSsid_;
+    }
+
+    [[nodiscard]] const std::string &getWifiPwd() const {
+        return wifiPwd;
+    }
+
+    void setWifiPwd(const std::string &wifiPwd_) {
+        AppConfig::wifiPwd = wifiPwd_;
+    }
 
     [[nodiscard]] uint32_t getOutputVoltageThreshold() const {
         return outputVoltageThreshold;

@@ -71,7 +71,14 @@ void AppConfig::loadJsonConfig(S &&stream) {
         this->setTemperatureVoltageThreshold(configJson["voltageSensor"]["temperatureThreshold"]);
     }
 
-    if (!configJson["deviceSerialNumber"].isNull()) {
+    if (!configJson["wifi"]["ssid"].isNull()) {
+        this->setWifiSsid(configJson["wifi"]["ssid"]);
+    }
+    if (!configJson["wifi"]["pwd"].isNull()) {
+        this->setWifiPwd(configJson["wifi"]["pwd"]);
+    }
+    std::string sn = configJson["deviceSerialNumber"];
+    if (!sn.empty()) {
         this->setDeviceSerialNumber(configJson["deviceSerialNumber"]);
     } else {
         std::string SN = configJson["deviceSerialNumber"];
@@ -118,6 +125,8 @@ void AppConfig::writeJsonConfig(S &&stream) {
     configJson["beepMute"] = this->getBeepMute();
     configJson["voltageSensor"]["outputThreshold"] = this->getOutputVoltageThreshold();
     configJson["voltageSensor"]["temperatureThreshold"] = this->getTemperatureVoltageThreshold();
+    configJson["wifi"]["ssid"] = this->getWifiSsid();
+    configJson["wifi"]["pwd"] = this->getWifiPwd();
 
     // Ignore SN
 
