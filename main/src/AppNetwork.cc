@@ -4,7 +4,9 @@
 
 #include "AppNetwork.h"
 
+#include "Tools.h"
 #include "OkWifi.h"
+#include "ProvServerScanner.h"
 
 #include "AppConfig.h"
 
@@ -14,16 +16,14 @@
 #include <esp_log.h>
 #include <nvs_flash.h>
 
-#include "Tools.h"
-
 static const char *TAG = "AppNetWork";
 
 AppNetwork::AppNetwork() : ssid(AppConfig::getInstance().getWifiSsid()), pwd(AppConfig::getInstance().getWifiPwd()) {
 }
 
-bool AppNetwork::start() {
-    if (!ssid.empty()) {
-        return connect();
+static bool start() {
+    if (!AppNetwork::getInstance().getSsid().empty()) {
+        return AppNetwork::getInstance().connect();
     }
 
     // Custom Prov Service Name
@@ -40,9 +40,9 @@ bool AppNetwork::start() {
         (provResult.getResult() == ok_wifi::ProvResultStatus::ResOk)) {
         ESP_LOGI(TAG, "Tack SSID: %s PWD %s", provResult.getSsid().c_str(),
                  provResult.getPwd().c_str());
-        ssid = provResult.getSsid();
-        pwd = provResult.getPwd();
-        return connect();
+        AppNetwork::getInstance().setSsid(provResult.getSsid());
+        AppNetwork::getInstance().setPwd(provResult.getPwd());
+        return AppNetwork::getInstance().connect();
     } else {
         ESP_LOGE(TAG, "Prov Error!!!");
         return false;
@@ -78,6 +78,31 @@ static esp_event_handler_instance_t instance_got_ip;
 
 bool AppNetwork::connect() {
     using namespace std::chrono_literals;
+
+    ok_wifi::ProvServerScanner::getInstance().setServerSsid(ssid);
+    ok_wifi::ProvServerScanner::getInstance().init();
+    std::this_thread::sleep_for(3s);
+
+    // Get Result
+    auto scanResult = ok_wifi::ProvServerScanner::getInstance().checkFounded();
+
+    ok_wifi::ProvServerScanner::getInstance().deinit();
+
+    // Rescan 5 count
+    if (!scanResult) {
+        for (int8_t i = 0; i < 5; i++) {
+            if (ok_wifi::ProvServerScanner::getInstance().scanOnce(1s)) {
+                scanResult = true;
+            }
+        }
+    }
+
+    if (!scanResult) {
+        ESP_LOGE(TAG, "Connection Not Found !!!");
+        ssid = "";
+        *AppNetwork::getInstance().getNetworkStatusLiveData() = NetworkStatus::NotFound;
+        return false;
+    }
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -119,4 +144,48 @@ bool AppNetwork::connect() {
     }
 
     return true;
+}
+
+
+static QueueDefinition *binarySemaphore = nullptr;
+
+static void startSyncWhileSuccessful() {
+    bool startResult = false;
+    while (!startResult) {
+        startResult = start();
+        if (*AppNetwork::getInstance().getNetworkStatusLiveData() == NetworkStatus::NotFound) {
+            static int retryCounter = 1;
+            retryCounter++;
+            if (retryCounter > 3) {
+                ESP_LOGE(TAG, "Error Prov Device");
+                esp_restart();
+            }
+            continue;
+        } else {
+            ESP_LOGE(TAG, "Wifi Init Error!");
+        }
+    }
+    if (binarySemaphore != nullptr) {
+        xSemaphoreGive(binarySemaphore);
+    }
+    vTaskDelete(nullptr);
+}
+
+static TaskHandle_t handler;
+
+void AppNetwork::asyncStart() {
+    xTaskCreatePinnedToCore((TaskFunction_t) startSyncWhileSuccessful, "AppNetwork", 5 * 1024, nullptr, 3, &handler, 1);
+    ESP_LOGI(TAG, "AppNetwork Created");
+}
+
+void AppNetwork::syncStart() {
+    if (binarySemaphore != nullptr) {
+        ESP_LOGE(TAG, "Error Launch Another TAsk Running!");
+        return;
+    }
+    asyncStart();
+    binarySemaphore = xSemaphoreCreateBinary();
+    xSemaphoreTake(binarySemaphore, portMAX_DELAY);
+    binarySemaphore = nullptr;
+    ESP_LOGI(TAG, "AppNetwork Created");
 }

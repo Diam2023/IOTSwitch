@@ -13,6 +13,7 @@
 enum NetworkStatus {
     ProvError,
     Connected,
+    NotFound,
     ConnectionError,
     Disconnected,
     TimeOut
@@ -26,20 +27,22 @@ private:
 
     LiveData<NetworkStatus> networkStatusLiveData;
 
-protected:
+public:
 
+    static void asyncStart();
+
+    static void syncStart();
+
+//    static bool run();
     /**
      * Async
      */
     bool connect();
 
-public:
-
     auto &getNetworkStatusLiveData() {
         return networkStatusLiveData;
     }
 
-    bool start();
 
     AppNetwork();
 
