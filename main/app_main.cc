@@ -21,6 +21,8 @@
 #include "AppNetwork.h"
 #include "MqttClient.h"
 
+using namespace std::chrono_literals;
+
 static const char *TAG = "MAIN";
 
 void init() {
@@ -84,7 +86,6 @@ extern "C" void app_main() {
 
     AppNetwork::asyncStart();
 
-    using namespace std::chrono_literals;
     auto touch = new TouchpadSensor(AppConfig::getInstance().getTouchpadNotifyThreshold(),
                                     AppConfig::getInstance().getTouchpadTouchLimitThreshold() * 1ms);
 
@@ -136,7 +137,6 @@ extern "C" void app_main() {
 //    AppRgb::getInstance().setRGB(100, 100, 100);
 
     while (true) {
-        using namespace std::chrono_literals;
         std::this_thread::sleep_for(500ms);
     }
 }

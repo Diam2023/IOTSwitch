@@ -54,11 +54,11 @@ To Control Switch Device
 
 ## Feature
 
-* MQTT control device
-* Touchpad control
-* Voice control
+* [x]MQTT control device
+* [x]Touchpad control
+* [x]Voice control
 
 ## Support Target
 
-* [ ] ESP32-S3 in process
-* [ ] ESP32-C3 wait process
+* [x]ESP32-S3 in process
+* [ ]ESP32-C3 wait process
