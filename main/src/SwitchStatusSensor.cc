@@ -19,13 +19,13 @@ void SwitchStatusSensor::onListener(const unsigned long &d) {
             // Mute Update
             *AppSwitch::getInstance() = SwitchStatus::Open;
             // TODO Call Mqtt Send
-//            MqttClientManager::getClient()->publishStatus();
+            MqttClientManager::getClient()->publishStatus();
         }
     } else {
         if (*AppSwitch::getInstance() == SwitchStatus::Open) {
             // Mute Update
             *AppSwitch::getInstance() = SwitchStatus::Close;
-//            MqttClientManager::getClient()->publishStatus();
+            MqttClientManager::getClient()->publishStatus();
         }
     }
 }
