@@ -26,12 +26,21 @@ class MqttClient : public idf::mqtt::Client {
 private:
 
     /**
-     * Switch Data Topic Filter
+     * Switch Action Topic Filter
      */
-    std::unique_ptr<idf::mqtt::Filter> dataFilterPtr;
+    std::unique_ptr<idf::mqtt::Filter> actionFilterPtr;
+    /**
+     * Setting Topic Filter
+     */
+    std::unique_ptr<idf::mqtt::Filter> settingFilterPtr;
 
     /**
-     * Config Data Topic Filter
+     * Just for publish
+     */
+    std::unique_ptr<idf::mqtt::Filter> statusFilterPtr;
+
+    /**
+     * Config Data For Publish
      */
     std::unique_ptr<idf::mqtt::Filter> configFilterPtr;
 
@@ -39,11 +48,6 @@ private:
      * LiveData Status For Mqtt
      */
     LiveData<MqttConnectionStatus> connectionStatusLiveData;
-
-    /**
-     * Just for publish
-     */
-    std::unique_ptr<idf::mqtt::Filter> statusFilterPtr;
 
 protected:
 
@@ -56,6 +60,7 @@ protected:
 public:
 
     void publishStatus();
+    void publishConfig();
 
     LiveData<MqttConnectionStatus> &getConnectionStatusLiveData() {
         return connectionStatusLiveData;
@@ -78,7 +83,7 @@ public:
      * Build It
      * @return smart pointer
      */
-    static std::shared_ptr<MqttClient> &build();
+    static void build();
 
     static std::shared_ptr<MqttClient> &getClient();
 };
