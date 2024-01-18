@@ -15,6 +15,7 @@
 #include <esp_event.h>
 #include <esp_log.h>
 #include <nvs_flash.h>
+#include <esp_event_cxx.hpp>
 
 static const char *TAG = "AppNetWork";
 
@@ -81,28 +82,17 @@ bool AppNetwork::connect() {
 
     ok_wifi::ProvServerScanner::getInstance().setServerSsid(ssid);
     ok_wifi::ProvServerScanner::getInstance().init();
-    std::this_thread::sleep_for(3s);
 
-    // Get Result
-    auto scanResult = ok_wifi::ProvServerScanner::getInstance().checkFounded();
-
-    ok_wifi::ProvServerScanner::getInstance().deinit();
-
-    // Rescan 5 count
-    if (!scanResult) {
-        for (int8_t i = 0; i < 5; i++) {
-            if (ok_wifi::ProvServerScanner::getInstance().scanOnce(1s)) {
-                scanResult = true;
-            }
-        }
-    }
-
-    if (!scanResult) {
+    try {
+        ok_wifi::ProvServerScanner::getInstance().wait(5);
+    } catch (const idf::event::EventException &e) {
         ESP_LOGE(TAG, "Connection Not Found !!!");
         ssid = "";
         *AppNetwork::getInstance().getNetworkStatusLiveData() = NetworkStatus::NotFound;
         return false;
     }
+
+    ok_wifi::ProvServerScanner::getInstance().deinit();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
