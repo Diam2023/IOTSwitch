@@ -1,12 +1,3 @@
-//#include "driver/gpio.h"
-
-//#include "app_led.h"
-//#include "app_rgb.h"
-//#include "app_speech.h"
-//#include "app_touch.h"
-//#include "mqtt_client.h"
-
-#include "Observer.h"
 #include "TouchpadSensor.h"
 #include <esp_log.h>
 #include <thread>
@@ -16,7 +7,6 @@
 #include <esp_system.h>
 #include <nvs_flash.h>
 #include <esp_netif.h>
-#include <esp_pm.h>
 #include <esp_spiffs.h>
 
 #include "AppBuzzer.h"
@@ -27,6 +17,9 @@
 #include "TemperatureSensor.h"
 #include "SpeechSensor.h"
 #include "AppRgb.h"
+
+#include "AppNetwork.h"
+#include "MqttClient.h"
 
 static const char *TAG = "MAIN";
 
@@ -71,12 +64,25 @@ void init() {
     setenv("TZ", "CST-8", 1);
     tzset();
 
+    esp_event_loop_create_default();
+
     AppConfig::getInstance().load();
 }
 
 
 extern "C" void app_main() {
     init();
+
+    AppNetwork::getInstance().getNetworkStatusLiveData().append([](auto s) {
+        if (s == NetworkStatus::Connected) {
+            ESP_LOGI(TAG, "Connected!");
+            AppConfig::getInstance().write();
+        } else {
+            ESP_LOGI(TAG, "Err Connection!");
+        }
+    });
+
+    AppNetwork::getInstance().start();
 
     using namespace std::chrono_literals;
     auto touch = new TouchpadSensor(AppConfig::getInstance().getTouchpadNotifyThreshold(),
