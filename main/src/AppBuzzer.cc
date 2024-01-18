@@ -61,7 +61,6 @@ void AppBuzzer::beepMicroTimeSync(const BeepTask &t) {
 
 
 void AppBuzzer::onListener(const SwitchStatus &d) {
-    ESP_LOGW(TAG, "Beep lis");
     if (d == SwitchStatus::Open) {
         beepMicroTimeAsync({2, 100});
     } else {
