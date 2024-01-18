@@ -10,10 +10,7 @@ AppSwitch &AppSwitch::operator=(const SwitchStatus &status) {
     LiveData<SwitchStatus>::operator=(status);
 
     // call publish
-//    MqttConnectionStatus connectionStatus = *(MqttClientManager::getClient()->getConnectionStatusLiveData());
-//    if (connectionStatus == MqttConnectionStatus::Connected) {
-//        MqttClientManager::getClient()->publishStatus();
-//    }
+    MqttClientManager::getClient()->publishStatus();
 
     return *this;
 }
