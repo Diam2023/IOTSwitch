@@ -248,6 +248,6 @@ SpeechSensor::SpeechSensor() : afe_handle(&ESP_AFE_SR_HANDLE),
 }
 
 void SpeechSensor::run() {
-    xTaskCreatePinnedToCore((TaskFunction_t) feed_handler, "App/SR/Feed", 4 * 1024, this, 5, NULL, 0);
-    xTaskCreatePinnedToCore((TaskFunction_t) detect_hander, "App/SR/Detect", 5 * 1024, this, 5, NULL, 0);
+    xTaskCreatePinnedToCore((TaskFunction_t) feed_handler, "App/SR/Feed", 4 * 1024, this, 5, nullptr, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t) detect_hander, "App/SR/Detect", 5 * 1024, this, 5, nullptr, 1);
 }
