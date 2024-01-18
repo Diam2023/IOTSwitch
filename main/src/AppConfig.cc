@@ -24,7 +24,7 @@ AppConfig &AppConfig::load() {
         std::ifstream ifs(g_pConfigFilePath, std::ifstream::in);
         std::stringstream buffer;
         buffer << ifs.rdbuf();
-        std::cout << ifs.rdbuf() << std::endl;
+//        std::cout << ifs.rdbuf() << std::endl;
         std::string dt(buffer.str());
         loadJsonConfig(dt);
     }
@@ -77,23 +77,18 @@ void AppConfig::loadJsonConfig(S &&stream) {
     if (!configJson["wifi"]["pwd"].isNull()) {
         this->setWifiPwd(configJson["wifi"]["pwd"]);
     }
-    std::string sn = configJson["deviceSerialNumber"];
-    if (!sn.empty()) {
-        this->setDeviceSerialNumber(configJson["deviceSerialNumber"]);
-    } else {
-        std::string SN = configJson["deviceSerialNumber"];
-        if (SN.length() < 16) {
-            uint8_t macAddress[8];
-            char macAddressString[17];
-            if (readFactorySetMacAddress(macAddress)) {
-                sprintf(macAddressString, "%02X%02X%02X%02X%02X%02X%02X%02X", (uint16_t) macAddress[0],
-                        (uint16_t) macAddress[1], (uint16_t) macAddress[2], (uint16_t) macAddress[3],
-                        (uint16_t) macAddress[4],
-                        (uint16_t) macAddress[5], (uint16_t) macAddress[6], (uint16_t) macAddress[7]);
-                this->setDeviceSerialNumber(std::string(macAddressString));
-            } else {
-                ESP_LOGE(TAG, "FAULT ERROR: SN Not Found!");
-            }
+
+    {
+        uint8_t macAddress[8];
+        char macAddressString[17];
+        if (readFactorySetMacAddress(macAddress)) {
+            sprintf(macAddressString, "%02X%02X%02X%02X%02X%02X%02X%02X", (uint16_t) macAddress[0],
+                    (uint16_t) macAddress[1], (uint16_t) macAddress[2], (uint16_t) macAddress[3],
+                    (uint16_t) macAddress[4],
+                    (uint16_t) macAddress[5], (uint16_t) macAddress[6], (uint16_t) macAddress[7]);
+            this->setDeviceSerialNumber(std::string(macAddressString));
+        } else {
+            ESP_LOGE(TAG, "FAULT ERROR: SN Not Found!");
         }
     }
 }
