@@ -14,7 +14,8 @@
 static const char *TAG = "App/Touch";
 
 
-TouchpadSensor::TouchpadSensor(int64_t notifyThreshold_, std::chrono::microseconds touchLimitThreshold_) : notifyThreshold(
+TouchpadSensor::TouchpadSensor(int64_t notifyThreshold_, std::chrono::microseconds touchLimitThreshold_)
+        : notifyThreshold(
         notifyThreshold_), touchLimitThreshold(touchLimitThreshold_) {
 
     touch_pad_init();
@@ -78,6 +79,6 @@ TouchpadSensor::TouchpadSensor(int64_t notifyThreshold_, std::chrono::microsecon
 }
 
 void TouchpadSensor::run() {
-    xTaskCreatePinnedToCore((TaskFunction_t) touch_handler, "App/Touch", 3 * 1024, this, 5, nullptr, 0);
+    xTaskCreatePinnedToCore((TaskFunction_t) touch_handler, "AppTouch", 4 * 1024, this, 5, nullptr, 0);
 }
 
