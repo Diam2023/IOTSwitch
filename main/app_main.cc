@@ -121,6 +121,9 @@ extern "C" void app_main() {
     });
 
     SpeechSensor::getInstance().speechSensorStatus.append(AppRgb::getInstance());
+    SpeechSensor::getInstance().speechSensorStatus.append([](auto s) {
+        AppBuzzer::getInstance().beepMicroTimeAsync({1, 50});
+    });
     AppRgb::getInstance().setRGB(100, 100, 100);
     while (true) {
         using namespace std::chrono_literals;

@@ -7,6 +7,7 @@
 #include "VoltageSensor.h"
 #include "AppConfig.h"
 #include "AppSwitch.h"
+#include "MqttClient.h"
 
 SwitchStatusSensor::SwitchStatusSensor() : outputThreshold(AppConfig::getInstance().getOutputVoltageThreshold()) {
     VoltageSensor::getInstance();
@@ -15,13 +16,16 @@ SwitchStatusSensor::SwitchStatusSensor() : outputThreshold(AppConfig::getInstanc
 void SwitchStatusSensor::onListener(const unsigned long &d) {
     if (d >= outputThreshold) {
         if (*AppSwitch::getInstance() == SwitchStatus::Close) {
-            // Update
-            AppSwitch::getInstance() = SwitchStatus::Open;
+            // Mute Update
+            *AppSwitch::getInstance() = SwitchStatus::Open;
+            // TODO Call Mqtt Send
+//            MqttClientManager::getClient()->publishStatus();
         }
     } else {
         if (*AppSwitch::getInstance() == SwitchStatus::Open) {
-            // Update
-            AppSwitch::getInstance() = SwitchStatus::Close;
+            // Mute Update
+            *AppSwitch::getInstance() = SwitchStatus::Close;
+//            MqttClientManager::getClient()->publishStatus();
         }
     }
 }
