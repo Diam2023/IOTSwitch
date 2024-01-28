@@ -26,8 +26,9 @@ VoltageSensor::VoltageSensor() {
 
     ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
 
+    ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_3, ADC_ATTEN_DB_12));
     ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_12));
-
+    ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_5, ADC_ATTEN_DB_12));
 
     readThread = std::make_shared<std::thread>(&VoltageSensor::readTask, this);
 }
@@ -49,6 +50,8 @@ uint32_t VoltageSensor::getVoltage(adc1_channel_t channel) {
         uint32_t coreTempVol = getVoltage(ADC1_CHANNEL_3);
         uint32_t outputVol = getVoltage(ADC1_CHANNEL_4);
         uint32_t outputTempVol = getVoltage(ADC1_CHANNEL_5);
+
+        ESP_LOGE(TAG, "o: %lu mV, ct: %lu mV, ot: %lu mV;", outputVol, coreTempVol, outputTempVol);
 
         if (*coreTemperatureSensorVoltage != coreTempVol) {
             coreTemperatureSensorVoltage = coreTempVol;

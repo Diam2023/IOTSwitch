@@ -8,12 +8,16 @@
 #include "AppConfig.h"
 #include "AppSwitch.h"
 #include "MqttClient.h"
+#include <esp_log.h>
 
 SwitchStatusSensor::SwitchStatusSensor() : outputThreshold(AppConfig::getInstance().getOutputVoltageThreshold()) {
     VoltageSensor::getInstance();
 }
 
 void SwitchStatusSensor::onListener(const unsigned long &d) {
+    long long i = d;
+//    ESP_LOGI("OutputSensor", "V: %lld", i);
+
     if (d >= outputThreshold) {
         if (*AppSwitch::getInstance() == SwitchStatus::Close) {
             // Mute Update
