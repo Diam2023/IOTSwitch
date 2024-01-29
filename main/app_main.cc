@@ -18,6 +18,8 @@
 #include "SpeechSensor.h"
 #include "AppRgb.h"
 
+#include "AppMicroSpeech.h"
+
 #include "AppNetwork.h"
 #include "MqttClient.h"
 
@@ -115,30 +117,32 @@ extern "C" void app_main() {
 
     AppConfig::getInstance().write();
 
-    VoltageSensor::getInstance().getOutputTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
-    VoltageSensor::getInstance().getCoreTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
-    VoltageSensor::getInstance().getOutputSensorVoltage().append(SwitchStatusSensor::getInstance());
+    ms::AppMicroSpeech::getInstance();
+
+//    VoltageSensor::getInstance().getOutputTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
+//    VoltageSensor::getInstance().getCoreTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
+//    VoltageSensor::getInstance().getOutputSensorVoltage().append(SwitchStatusSensor::getInstance());
 
     // Important
-    SpeechSensor::getInstance().run();
-    SpeechSensor::getInstance().switchCommandStatus.append([](auto s) {
-        if (s == SwitchStatus::Open) {
-            if (*AppSwitch::getInstance() == SwitchStatus::Close) {
-                AppSwitch::getInstance() = SwitchStatus::Open;
-            }
-        } else {
-            if (*AppSwitch::getInstance() == SwitchStatus::Open) {
-                AppSwitch::getInstance() = SwitchStatus::Close;
-            }
-        }
-    });
+//    SpeechSensor::getInstance().run();
+//    SpeechSensor::getInstance().switchCommandStatus.append([](auto s) {
+//        if (s == SwitchStatus::Open) {
+//            if (*AppSwitch::getInstance() == SwitchStatus::Close) {
+//                AppSwitch::getInstance() = SwitchStatus::Open;
+//            }
+//        } else {
+//            if (*AppSwitch::getInstance() == SwitchStatus::Open) {
+//                AppSwitch::getInstance() = SwitchStatus::Close;
+//            }
+//        }
+//    });
 
 //    SpeechSensor::getInstance().speechSensorStatus.append(AppRgb::getInstance());
-    SpeechSensor::getInstance().speechSensorStatus.append([](const SpeechSensorStatus &s) {
-        if ((s.status == SpeechStatus::Detecting) && (s.command < 0)) {
-            AppBuzzer::getInstance().beepMicroTimeAsync({1, 50});
-        }
-    });
+//    SpeechSensor::getInstance().speechSensorStatus.append([](const SpeechSensorStatus &s) {
+//        if ((s.status == SpeechStatus::Detecting) && (s.command < 0)) {
+//            AppBuzzer::getInstance().beepMicroTimeAsync({1, 50});
+//        }
+//    });
 
 //    AppRgb::getInstance().setRGB(100, 100, 100);
 

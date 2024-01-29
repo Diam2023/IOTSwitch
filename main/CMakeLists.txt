@@ -1,11 +1,12 @@
 set(COMPONENT_REQUIRES)
 set(COMPONENT_PRIV_REQUIRES)
 
-file(GLOB_RECURSE COMPONENT_SRCS "./*.c*" "./src/*.c*")
+file(GLOB_RECURSE COMPONENT_SRCS "./*.c*" "./src/*.c*" "./micro_speech/*.c*")
 
 set(COMPONENT_ADD_INCLUDEDIRS
         "./inc"
         "./src"
+        "./micro_speech"
 )
 
 set(CONFIG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../config)

@@ -116,10 +116,12 @@ void MqttClient::publishStatus() {
 
     static uint32_t coreTemp;
     static uint32_t switchTemp;
-    coreTemp = *VoltageSensor::getInstance().getCoreTemperatureSensorVoltage();
-    switchTemp = *VoltageSensor::getInstance().getOutputTemperatureSensorVoltage();
-    staticJsonDocument["coreTemperature"] = coreTemp;
-    staticJsonDocument["switchTemperature"] = switchTemp;
+
+    // TODO
+//    coreTemp = *VoltageSensor::getInstance().getCoreTemperatureSensorVoltage();
+//    switchTemp = *VoltageSensor::getInstance().getOutputTemperatureSensorVoltage();
+//    staticJsonDocument["coreTemperature"] = coreTemp;
+//    staticJsonDocument["switchTemperature"] = switchTemp;
 
     std::string data;
     ArduinoJson::serializeJson(staticJsonDocument, data);

@@ -11,14 +11,17 @@
 #include "esp_mn_models.h"
 
 #include "AppSwitch.h"
+#include "AppMicroSpeech.h"
 
 #define I2S_CHANNEL_NUM 1
 #define I2S_CH ((i2s_port_t)1)
 
 static const char *TAG = "Speech";
 
+
 static i2s_chan_handle_t rx_handle = NULL;        // I2S rx channel handler
 
+#include "feature_provider.h"
 
 #define I2S_CONFIG_DEFAULT(sample_rate, channel_fmt, bits_per_chan) { \
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(sample_rate), \
@@ -37,20 +40,20 @@ static i2s_chan_handle_t rx_handle = NULL;        // I2S rx channel handler
         }, \
     }
 
-static esp_err_t i2s_init(i2s_port_t i2s_num, uint32_t sample_rate, int channel_format, int bits_per_chan) {
-    esp_err_t ret_val = ESP_OK;
-
-    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(i2s_num, I2S_ROLE_MASTER);
-
-    ret_val |= i2s_new_channel(&chan_cfg, NULL, &rx_handle);
-    i2s_std_config_t std_cfg = I2S_CONFIG_DEFAULT(16000, I2S_SLOT_MODE_MONO, I2S_DATA_BIT_WIDTH_32BIT);
-    std_cfg.slot_cfg.slot_mask = I2S_STD_SLOT_LEFT;
-    // std_cfg.clk_cfg.mclk_multiple = EXAMPLE_MCLK_MULTIPLE;   //The default is I2S_MCLK_MULTIPLE_256. If not using 24-bit data width, 256 should be enough
-    ret_val |= i2s_channel_init_std_mode(rx_handle, &std_cfg);
-    ret_val |= i2s_channel_enable(rx_handle);
-
-    return ret_val;
-}
+//static esp_err_t i2s_init(i2s_port_t i2s_num, uint32_t sample_rate, int channel_format, int bits_per_chan) {
+//    esp_err_t ret_val = ESP_OK;
+//
+//    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(i2s_num, I2S_ROLE_MASTER);
+//
+//    ret_val |= i2s_new_channel(&chan_cfg, NULL, &rx_handle);
+//    i2s_std_config_t std_cfg = I2S_CONFIG_DEFAULT(16000, I2S_SLOT_MODE_MONO, I2S_DATA_BIT_WIDTH_32BIT);
+//    std_cfg.slot_cfg.slot_mask = I2S_STD_SLOT_LEFT;
+//    // std_cfg.clk_cfg.mclk_multiple = EXAMPLE_MCLK_MULTIPLE;   //The default is I2S_MCLK_MULTIPLE_256. If not using 24-bit data width, 256 should be enough
+//    ret_val |= i2s_channel_init_std_mode(rx_handle, &std_cfg);
+//    ret_val |= i2s_channel_enable(rx_handle);
+//
+//    return ret_val;
+//}
 
 static void feed_handler(SpeechSensor *self) {
     esp_afe_sr_data_t *afe_data = self->afe_data;
@@ -65,14 +68,16 @@ static void feed_handler(SpeechSensor *self) {
     // if (fp == NULL) ESP_LOGE(TAG,"can not open file\n");
 
     while (true) {
-        i2s_channel_read(rx_handle, i2s_buff, samp_len_bytes, &bytes_read, portMAX_DELAY);
+        if (!ms::AppMicroSpeech::getInstance().getSampleStatus()) {
+            i2s_channel_read(rx_handle, i2s_buff, samp_len_bytes, &bytes_read, portMAX_DELAY);
 
-        for (int i = 0; i < samp_len; ++i) {
-            i2s_buff[i] = i2s_buff[i] >> 14; // 32:8为有效位， 8:0为低8位， 全为0， AFE的输入为16位语音数据，拿29：13位是为了对语音信号放大。
+            for (int i = 0; i < samp_len; ++i) {
+                i2s_buff[i] = i2s_buff[i] >> 14; // 32:8为有效位， 8:0为低8位， 全为0， AFE的输入为16位语音数据，拿29：13位是为了对语音信号放大。
+            }
+            // FatfsComboWrite(i2s_buff, audio_chunksize * I2S_CHANNEL_NUM * sizeof(int16_t), 1, fp);
+
+            self->afe_handle->feed(afe_data, (int16_t *) i2s_buff);
         }
-        // FatfsComboWrite(i2s_buff, audio_chunksize * I2S_CHANNEL_NUM * sizeof(int16_t), 1, fp);
-
-        self->afe_handle->feed(afe_data, (int16_t *) i2s_buff);
     }
     self->afe_handle->destroy(afe_data);
     if (i2s_buff) {
@@ -108,6 +113,18 @@ static void detect_hander(SpeechSensor *self) {
         self->speechSensorStatus = originStatus;
     }
 
+    ms::AppMicroSpeech::getInstance().getDetectionLiveData().append([self](auto const &r) {
+        if (r) {
+            SpeechSensorStatus originStatus = (*self->speechSensorStatus);
+            if (originStatus.status != SpeechStatus::Detecting) {
+                originStatus.status = SpeechStatus::Detecting;
+                self->speechSensorStatus = originStatus;
+            }
+        } else {
+            ms::AppMicroSpeech::getInstance().cleanUp();
+        }
+    });
+
     while (true) {
         afe_fetch_result_t *res = self->afe_handle->fetch(afe_data);
         if (!res || res->ret_value == ESP_FAIL) {
@@ -115,25 +132,22 @@ static void detect_hander(SpeechSensor *self) {
             break;
         }
 
-        if (res->wakeup_state == WAKENET_DETECTED) {
-            ESP_LOGI(TAG, "WAKEWORD DETECTED");
-            multinet->clean(model_data);  // clean all status of multinet
-        } else if (res->wakeup_state == WAKENET_CHANNEL_VERIFIED) {
-            ESP_LOGI(TAG, "AFE_FETCH_CHANNEL_VERIFIED, channel index: %d", res->trigger_channel_id);
-            ESP_LOGI(TAG, ">>> Say your command <<<");
-            originStatus = (*self->speechSensorStatus);
-            if (originStatus.status != SpeechStatus::Detecting) {
-                originStatus.status = SpeechStatus::Detecting;
-                self->speechSensorStatus = originStatus;
-            }
-//            self->detected = true;
-            self->afe_handle->disable_wakenet(afe_data);
-
-            // TODO Change
-//            self->notify();
-        }
+//        if (res->wakeup_state == WAKENET_DETECTED) {
+//            ESP_LOGI(TAG, "WAKEWORD DETECTED");
+//            multinet->clean(model_data);  // clean all status of multinet
+//        } else if (res->wakeup_state == WAKENET_CHANNEL_VERIFIED) {
+//            ESP_LOGI(TAG, "AFE_FETCH_CHANNEL_VERIFIED, channel index: %d", res->trigger_channel_id);
+//            ESP_LOGI(TAG, ">>> Say your command <<<");
+//            originStatus = (*self->speechSensorStatus);
+//            if (originStatus.status != SpeechStatus::Detecting) {
+//                originStatus.status = SpeechStatus::Detecting;
+//                self->speechSensorStatus = originStatus;
+//            }
+//            self->afe_handle->disable_wakenet(afe_data);
+//        }
 
         originStatus = (*self->speechSensorStatus);
+//        originStatus.status = SpeechStatus::Detecting;
         if (originStatus.status == SpeechStatus::Detecting) {
             esp_mn_state_t mn_state = multinet->detect(model_data, res->data);
 
@@ -153,7 +167,6 @@ static void detect_hander(SpeechSensor *self) {
 
                 if (originStatus.command != (command_word_t) mn_result->command_id[0]) {
                     originStatus.command = (command_word_t) mn_result->command_id[0];
-//                self->command = (command_word_t) mn_result->command_id[0];
                     if (originStatus.command == command_word_t::MENU_ON) {
                         self->switchCommandStatus = SwitchStatus::Open;
                     } else if (originStatus.command == command_word_t::MENU_OFF) {
@@ -170,25 +183,17 @@ static void detect_hander(SpeechSensor *self) {
                     self->speechSensorStatus = originStatus;
                 }
 
-//                self->detected = false;
-//                self->command = COMMAND_TIMEOUT;
-
-                // self->notify();
             } else if (mn_state == ESP_MN_STATE_TIMEOUT) {
                 esp_mn_results_t *mn_result = multinet->get_results(model_data);
                 ESP_LOGI(TAG, "timeout, string:%s", mn_result->string);
 
-//                self->command = COMMAND_TIMEOUT;
                 self->afe_handle->enable_wakenet(afe_data);
-//                self->detected = false;
                 ESP_LOGI(TAG, ">>> Waiting to be waken up <<<");
                 if (originStatus.command != COMMAND_TIMEOUT || originStatus.status != SpeechStatus::NonDetect) {
                     originStatus.status = SpeechStatus::NonDetect;
                     originStatus.command = COMMAND_TIMEOUT;
                     self->speechSensorStatus = originStatus;
                 }
-
-                // self->notify();
             }
         }
     }
@@ -204,13 +209,13 @@ SpeechSensor::SpeechSensor() : afe_handle(&ESP_AFE_SR_HANDLE),
                                speechSensorStatus({SpeechStatus::NonDetect, command_word_t::COMMAND_TIMEOUT}),
                                switchCommandStatus(*AppSwitch::getInstance()) {
     this->models = esp_srmodel_init("model");
-    i2s_init(I2S_NUM_1, 16000, 2, 32);
+//    i2s_init(I2S_NUM_1, 16000, 2, 32);
     // sd_card_mount("/sdcard");
     afe_config_t afe_config = {
             .aec_init = true,
             .se_init = true,
             .vad_init = true,
-            .wakenet_init = true,
+            .wakenet_init = false, // https://docs.espressif.com/projects/esp-sr/zh_CN/latest/esp32/esp-sr-zh_CN-master-esp32.pdf Capture 3.1.2
             .voice_communication_init = false,
             .voice_communication_agc_init = false,
             .voice_communication_agc_gain = 15,
