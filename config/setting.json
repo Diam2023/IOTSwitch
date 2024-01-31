@@ -6,15 +6,15 @@
     "temperatureThreshold": 2000
   },
   "touchpad": {
-    "notifyThreshold": 50000,
-    "touchLimitThreshold": 500
+    "notifyThreshold": 40000,
+    "touchLimitThreshold": 250
   },
   "wifi": {
     "ssid": "DIAM_ADAPT",
     "pwd": "!9d@2SaL9_"
   },
   "mqtt": {
-    "host": "mqtt://192.168.0.99",
+    "host": "mqtt://192.168.0.188",
     "port": 1883
   }
 }
