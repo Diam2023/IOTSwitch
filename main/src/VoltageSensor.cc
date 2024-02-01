@@ -51,7 +51,7 @@ uint32_t VoltageSensor::getVoltage(adc1_channel_t channel) {
         uint32_t outputVol = getVoltage(ADC1_CHANNEL_4);
         uint32_t outputTempVol = getVoltage(ADC1_CHANNEL_5);
 
-        ESP_LOGE(TAG, "o: %lu mV, ct: %lu mV, ot: %lu mV;", outputVol, coreTempVol, outputTempVol);
+//        ESP_LOGE(TAG, "o: %lu mV, ct: %lu mV, ot: %lu mV;", outputVol, coreTempVol, outputTempVol);
 
         if (*coreTemperatureSensorVoltage != coreTempVol) {
             coreTemperatureSensorVoltage = coreTempVol;

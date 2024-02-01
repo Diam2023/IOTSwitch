@@ -133,12 +133,16 @@ extern "C" void app_main() {
         }
     });
 
+    // Launch Beep
+    AppBuzzer::getInstance().beepMicroTimeAsync({1, 50});
+
+    // REMOVE Detect beep
 //    SpeechSensor::getInstance().speechSensorStatus.append(AppRgb::getInstance());
-    SpeechSensor::getInstance().speechSensorStatus.append([](const SpeechSensorStatus &s) {
-        if ((s.status == SpeechStatus::Detecting) && (s.command < 0)) {
-            AppBuzzer::getInstance().beepMicroTimeAsync({1, 50});
-        }
-    });
+//    SpeechSensor::getInstance().speechSensorStatus.append([](const SpeechSensorStatus &s) {
+//        if ((s.status == SpeechStatus::Detecting) && (s.command < 0)) {
+//            AppBuzzer::getInstance().beepMicroTimeAsync({1, 50});
+//        }
+//    });
 
 //    AppRgb::getInstance().setRGB(100, 100, 100);
 
