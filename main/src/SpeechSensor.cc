@@ -115,25 +115,27 @@ static void detect_hander(SpeechSensor *self) {
             break;
         }
 
-        if (res->wakeup_state == WAKENET_DETECTED) {
-            ESP_LOGI(TAG, "WAKEWORD DETECTED");
-            multinet->clean(model_data);  // clean all status of multinet
-        } else if (res->wakeup_state == WAKENET_CHANNEL_VERIFIED) {
-            ESP_LOGI(TAG, "AFE_FETCH_CHANNEL_VERIFIED, channel index: %d", res->trigger_channel_id);
-            ESP_LOGI(TAG, ">>> Say your command <<<");
-            originStatus = (*self->speechSensorStatus);
-            if (originStatus.status != SpeechStatus::Detecting) {
-                originStatus.status = SpeechStatus::Detecting;
-                self->speechSensorStatus = originStatus;
-            }
+//        if (res->wakeup_state == WAKENET_DETECTED) {
+//            ESP_LOGI(TAG, "WAKEWORD DETECTED");
+//            multinet->clean(model_data);  // clean all status of multinet
+//        } else if (res->wakeup_state == WAKENET_CHANNEL_VERIFIED) {
+//            ESP_LOGI(TAG, "AFE_FETCH_CHANNEL_VERIFIED, channel index: %d", res->trigger_channel_id);
+//            ESP_LOGI(TAG, ">>> Say your command <<<");
+//            originStatus = (*self->speechSensorStatus);
+//            if (originStatus.status != SpeechStatus::Detecting) {
+//                originStatus.status = SpeechStatus::Detecting;
+//                self->speechSensorStatus = originStatus;
+//            }
 //            self->detected = true;
-            self->afe_handle->disable_wakenet(afe_data);
+//            self->afe_handle->disable_wakenet(afe_data);
 
-            // TODO Change
+        // TODO Change
 //            self->notify();
-        }
+//        }
 
+        // TODO Wait Remove
         originStatus = (*self->speechSensorStatus);
+        originStatus.status = SpeechStatus::Detecting;
         if (originStatus.status == SpeechStatus::Detecting) {
             esp_mn_state_t mn_state = multinet->detect(model_data, res->data);
 
@@ -161,9 +163,9 @@ static void detect_hander(SpeechSensor *self) {
                     }
                     self->speechSensorStatus = originStatus;
                 }
-                self->afe_handle->enable_wakenet(afe_data);
+//                self->afe_handle->enable_wakenet(afe_data);
 
-                ESP_LOGI(TAG, ">>> Waiting to be waken up <<<");
+//                ESP_LOGI(TAG, ">>> Waiting to be waken up <<<");
                 if (originStatus.command != COMMAND_TIMEOUT || originStatus.status != SpeechStatus::NonDetect) {
                     originStatus.status = SpeechStatus::NonDetect;
                     originStatus.command = COMMAND_TIMEOUT;
@@ -176,12 +178,12 @@ static void detect_hander(SpeechSensor *self) {
                 // self->notify();
             } else if (mn_state == ESP_MN_STATE_TIMEOUT) {
                 esp_mn_results_t *mn_result = multinet->get_results(model_data);
-                ESP_LOGI(TAG, "timeout, string:%s", mn_result->string);
+//                ESP_LOGI(TAG, "timeout, string:%s", mn_result->string);
 
 //                self->command = COMMAND_TIMEOUT;
-                self->afe_handle->enable_wakenet(afe_data);
+//                self->afe_handle->enable_wakenet(afe_data);
 //                self->detected = false;
-                ESP_LOGI(TAG, ">>> Waiting to be waken up <<<");
+//                ESP_LOGI(TAG, ">>> Waiting to be waken up <<<");
                 if (originStatus.command != COMMAND_TIMEOUT || originStatus.status != SpeechStatus::NonDetect) {
                     originStatus.status = SpeechStatus::NonDetect;
                     originStatus.command = COMMAND_TIMEOUT;
