@@ -4,12 +4,6 @@ To Control Switch Device
 
 ## IDF_VERSION V5.1
 
-## TODO List
-
-* [ ] RGB BUG Fix
-* [ ] Delete Old API
-* [ ] custom design wakeup word
-
 ## Mqtt
 
 ### Publish
@@ -57,6 +51,7 @@ To Control Switch Device
 * [x] MQTT control device
 * [x] Touchpad control
 * [x] Voice control
+* [x] WebControl
 
 ## Support Target
 
