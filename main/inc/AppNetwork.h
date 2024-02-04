@@ -6,6 +6,8 @@
 #define IOTSWITCH_APPNETWORK_H
 
 #include <future>
+#include <esp_log.h>
+#include <esp_wifi.h>
 #include <esp_wifi_netif.h>
 
 #include "Observer.h"

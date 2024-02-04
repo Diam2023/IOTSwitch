@@ -11,6 +11,7 @@
 #include <esp_log.h>
 #include <thread>
 #include <fstream>
+#include <mutex>
 
 #include "VoltageSensor.h"
 
