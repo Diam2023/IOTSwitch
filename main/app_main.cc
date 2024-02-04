@@ -123,13 +123,13 @@ extern "C" void app_main() {
     SpeechSensor::getInstance().run();
     SpeechSensor::getInstance().switchCommandStatus.append([](auto s) {
         if (s == SwitchStatus::Open) {
-            if (*AppSwitch::getInstance() == SwitchStatus::Close) {
-                AppSwitch::getInstance() = SwitchStatus::Open;
-            }
+            AppSwitch::getInstance() = SwitchStatus::Open;
+//            if (*AppSwitch::getInstance() == SwitchStatus::Close) {
+//            }
         } else {
-            if (*AppSwitch::getInstance() == SwitchStatus::Open) {
+//            if (*AppSwitch::getInstance() == SwitchStatus::Open) {
                 AppSwitch::getInstance() = SwitchStatus::Close;
-            }
+//            }
         }
     });
 
