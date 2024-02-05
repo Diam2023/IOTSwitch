@@ -164,7 +164,7 @@ static void startSyncWhileSuccessful() {
 static TaskHandle_t handler;
 
 void AppNetwork::asyncStart() {
-    xTaskCreatePinnedToCore((TaskFunction_t) startSyncWhileSuccessful, "AppNetwork", 5 * 1024, nullptr, 3, &handler, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t) startSyncWhileSuccessful, "AppNetwork", 5 * 1024, nullptr, 3, &handler, 0);
     ESP_LOGI(TAG, "AppNetwork Created");
 }
 
