@@ -18,7 +18,7 @@ public:
 
     LiveData<SpeechSensorStatus> speechSensorStatus;
 
-    LiveData<SwitchStatus> switchCommandStatus;
+    AsyncData<SwitchStatus> switchCommandStatus;
 
     SpeechSensor();
 

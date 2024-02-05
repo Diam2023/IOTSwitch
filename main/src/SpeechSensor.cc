@@ -3,6 +3,7 @@
 #include "driver/i2s_std.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include <thread>
 
 #include "esp_wn_iface.h"
 #include "esp_wn_models.h"
@@ -42,8 +43,8 @@ static esp_err_t i2s_init(i2s_port_t i2s_num, uint32_t sample_rate, int channel_
 
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(i2s_num, I2S_ROLE_MASTER);
 
-    ret_val |= i2s_new_channel(&chan_cfg, NULL, &rx_handle);
-    i2s_std_config_t std_cfg = I2S_CONFIG_DEFAULT(16000, I2S_SLOT_MODE_MONO, I2S_DATA_BIT_WIDTH_32BIT);
+    ret_val |= i2s_new_channel(&chan_cfg, nullptr, &rx_handle);
+    i2s_std_config_t std_cfg = I2S_CONFIG_DEFAULT(sample_rate, I2S_SLOT_MODE_MONO, I2S_DATA_BIT_WIDTH_32BIT);
     std_cfg.slot_cfg.slot_mask = I2S_STD_SLOT_LEFT;
     // std_cfg.clk_cfg.mclk_multiple = EXAMPLE_MCLK_MULTIPLE;   //The default is I2S_MCLK_MULTIPLE_256. If not using 24-bit data width, 256 should be enough
     ret_val |= i2s_channel_init_std_mode(rx_handle, &std_cfg);
@@ -61,25 +62,22 @@ static void feed_handler(SpeechSensor *self) {
     int32_t *i2s_buff = (int32_t *) malloc(samp_len_bytes);
     assert(i2s_buff);
     size_t bytes_read;
-    // FILE *fp = fopen("/sdcard/out", "a+");
-    // if (fp == NULL) ESP_LOGE(TAG,"can not open file\n");
 
     while (true) {
-        i2s_channel_read(rx_handle, i2s_buff, samp_len_bytes, &bytes_read, portMAX_DELAY);
+        i2s_channel_read(rx_handle, i2s_buff, samp_len_bytes, &bytes_read, 2000 / portTICK_PERIOD_MS);
 
         for (int i = 0; i < samp_len; ++i) {
             i2s_buff[i] = i2s_buff[i] >> 14; // 32:8为有效位， 8:0为低8位， 全为0， AFE的输入为16位语音数据，拿29：13位是为了对语音信号放大。
         }
-        // FatfsComboWrite(i2s_buff, audio_chunksize * I2S_CHANNEL_NUM * sizeof(int16_t), 1, fp);
 
         self->afe_handle->feed(afe_data, (int16_t *) i2s_buff);
     }
     self->afe_handle->destroy(afe_data);
     if (i2s_buff) {
         free(i2s_buff);
-        i2s_buff = NULL;
+        i2s_buff = nullptr;
     }
-    vTaskDelete(NULL);
+    vTaskDelete(nullptr);
 }
 
 static void detect_hander(SpeechSensor *self) {
@@ -128,12 +126,8 @@ static void detect_hander(SpeechSensor *self) {
 //            }
 //            self->detected = true;
 //            self->afe_handle->disable_wakenet(afe_data);
-
-        // TODO Change
-//            self->notify();
 //        }
 
-        // TODO Wait Remove
         originStatus = (*self->speechSensorStatus);
         originStatus.status = SpeechStatus::Detecting;
         if (originStatus.status == SpeechStatus::Detecting) {
@@ -155,11 +149,12 @@ static void detect_hander(SpeechSensor *self) {
 
                 if (originStatus.command != (command_word_t) mn_result->command_id[0]) {
                     originStatus.command = (command_word_t) mn_result->command_id[0];
-//                self->command = (command_word_t) mn_result->command_id[0];
                     if (originStatus.command == command_word_t::MENU_ON) {
                         self->switchCommandStatus = SwitchStatus::Open;
                     } else if (originStatus.command == command_word_t::MENU_OFF) {
                         self->switchCommandStatus = SwitchStatus::Close;
+                    } else if (originStatus.command == command_word_t::MENU_REBOOT) {
+                        esp_restart();
                     }
                     self->speechSensorStatus = originStatus;
                 }
@@ -196,10 +191,10 @@ static void detect_hander(SpeechSensor *self) {
     }
     if (model_data) {
         multinet->destroy(model_data);
-        model_data = NULL;
+        model_data = nullptr;
     }
     self->afe_handle->destroy(afe_data);
-    vTaskDelete(NULL);
+    vTaskDelete(nullptr);
 }
 
 SpeechSensor::SpeechSensor() : afe_handle(&ESP_AFE_SR_HANDLE),
@@ -212,13 +207,13 @@ SpeechSensor::SpeechSensor() : afe_handle(&ESP_AFE_SR_HANDLE),
             .aec_init = true,
             .se_init = true,
             .vad_init = true,
-            .wakenet_init = false,
+            .wakenet_init = false, // Close Wakeup word detection
             .voice_communication_init = false,
             .voice_communication_agc_init = false,
             .voice_communication_agc_gain = 15,
             .vad_mode = VAD_MODE_3,
-            .wakenet_model_name = NULL,
-            .wakenet_model_name_2 = NULL,
+            .wakenet_model_name = nullptr,
+            .wakenet_model_name_2 = nullptr,
             .wakenet_mode = DET_MODE_2CH_90,
             .afe_mode = SR_MODE_LOW_COST,
             .afe_perferred_core = 0,
@@ -233,23 +228,23 @@ SpeechSensor::SpeechSensor() : afe_handle(&ESP_AFE_SR_HANDLE),
                     .ref_num = 1,
                     .sample_rate = 16000,
             },
-            .debug_init = false,
-            .debug_hook = {{AFE_DEBUG_HOOK_MASE_TASK_IN,  NULL},
-                           {AFE_DEBUG_HOOK_FETCH_TASK_IN, NULL}},
+            .debug_init = true,
+            .debug_hook = {{AFE_DEBUG_HOOK_MASE_TASK_IN,  nullptr},
+                           {AFE_DEBUG_HOOK_FETCH_TASK_IN, nullptr}},
     };
-    afe_config.aec_init = false;
-    afe_config.se_init = false;
-    afe_config.vad_init = false;
+//    afe_config.aec_init = false;
+//    afe_config.se_init = false;
+//    afe_config.vad_init = false;
     afe_config.afe_ringbuf_size = 10;
     afe_config.pcm_config.total_ch_num = 2;
     afe_config.pcm_config.mic_num = 1;
     afe_config.pcm_config.ref_num = 1;
     afe_config.pcm_config.sample_rate = 16000;
-    afe_config.wakenet_model_name = esp_srmodel_filter(this->models, ESP_WN_PREFIX, NULL);
+    afe_config.wakenet_model_name = esp_srmodel_filter(this->models, ESP_WN_PREFIX, nullptr);
     this->afe_data = this->afe_handle->create_from_config(&afe_config);
 }
 
 void SpeechSensor::run() {
-    xTaskCreatePinnedToCore((TaskFunction_t) feed_handler, "App/SR/Feed", 4 * 1024, this, 5, nullptr, 1);
-    xTaskCreatePinnedToCore((TaskFunction_t) detect_hander, "App/SR/Detect", 5 * 1024, this, 5, nullptr, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t) feed_handler, "AppFeed", 4 * 1024, this, 5, nullptr, 1);
+    xTaskCreatePinnedToCore((TaskFunction_t) detect_hander, "AppDetect", 5 * 1024, this, 5, nullptr, 1);
 }
