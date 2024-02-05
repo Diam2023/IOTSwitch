@@ -100,7 +100,6 @@ extern "C" void app_main() {
 
     touch->getTouchStatusLiveData().append([](auto &status) {
         if (status == TouchStatus::TOUCHING) {
-            ESP_LOGW(TAG, "Touching");
             AppSwitch::getInstance() =
                     (*AppSwitch::getInstance() == SwitchStatus::Open)
                     ? SwitchStatus::Close
@@ -115,22 +114,14 @@ extern "C" void app_main() {
 
     AppConfig::getInstance().write();
 
-    VoltageSensor::getInstance().getOutputTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
-    VoltageSensor::getInstance().getCoreTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
-    VoltageSensor::getInstance().getOutputSensorVoltage().append(SwitchStatusSensor::getInstance());
+//    VoltageSensor::getInstance().getOutputTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
+//    VoltageSensor::getInstance().getCoreTemperatureSensorVoltage().append(TemperatureSensor::getInstance());
+//    VoltageSensor::getInstance().getOutputSensorVoltage().append(SwitchStatusSensor::getInstance());
 
     // Important
     SpeechSensor::getInstance().run();
     SpeechSensor::getInstance().switchCommandStatus.append([](auto s) {
-        if (s == SwitchStatus::Open) {
-            AppSwitch::getInstance() = SwitchStatus::Open;
-//            if (*AppSwitch::getInstance() == SwitchStatus::Close) {
-//            }
-        } else {
-//            if (*AppSwitch::getInstance() == SwitchStatus::Open) {
-                AppSwitch::getInstance() = SwitchStatus::Close;
-//            }
-        }
+        AppSwitch::getInstance() = s;
     });
 
     // Launch Beep
