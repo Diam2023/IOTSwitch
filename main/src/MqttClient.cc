@@ -192,7 +192,7 @@ std::shared_ptr<MqttClient> &MqttClientManager::getClient() {
     entryLock.lock();
     if (!clientPtr) {
         TaskHandle_t handler;
-        xTaskCreatePinnedToCore((TaskFunction_t) build, "MqttBuilder", 5 * 1024, nullptr, 5, &handler, 1);
+        xTaskCreatePinnedToCore((TaskFunction_t) build, "MqttBuilder", 5 * 1024, nullptr, 5, &handler, 0);
         binarySemaphore = xSemaphoreCreateBinary();
         xSemaphoreTake(binarySemaphore, portMAX_DELAY);
         ESP_LOGI(TAG, "MqttClient Created");
